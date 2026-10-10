@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AIOPS Platform - Login{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .glass-card {
+        background: rgba(10, 10, 30, 0.55);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 1.5rem;
+        padding: 2.75rem 2.5rem;
+        width: 440px;
+        box-shadow:
+            0 0 0 1px rgba(255,255,255,0.04) inset,
+            0 8px 40px rgba(0,0,0,0.6),
+            0 0 60px rgba(79,70,229,0.12);
+        animation: fadeUp 0.6s ease-out both;
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-logo {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #ffffff;
+        letter-spacing: -0.03em;
+        text-align: center;
+        margin-bottom: 0.4rem;
+        text-decoration: none !important;
+        display: block;
+    }
+    .auth-logo i { color: #818cf8; margin-right: 0.4rem; }
+
+    .auth-subtitle {
+        text-align: center;
+        color: rgba(255,255,255,0.5);
+        font-size: 0.85rem;
+        margin-bottom: 2rem;
+    }
+
+    .glass-input {
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        color: #ffffff !important;
+        padding: 0.8rem 1rem 0.8rem 2.6rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 0.65rem !important;
+        transition: all 0.2s ease !important;
+        width: 100%;
+    }
+    .glass-input::placeholder { color: rgba(255,255,255,0.35) !important; }
+    .glass-input:focus {
+        background: rgba(255,255,255,0.1) !important;
+        border-color: rgba(99,102,241,0.6) !important;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.2) !important;
+        outline: none !important;
+        color: #fff !important;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 0.9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255,255,255,0.4);
+        font-size: 0.85rem;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    .btn-signin {
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        color: #fff;
+        border: none;
+        padding: 0.85rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        border-radius: 0.65rem;
+        width: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(79,70,229,0.4);
+        letter-spacing: 0.02em;
+    }
+    .btn-signin:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(79,70,229,0.55);
+        background: linear-gradient(135deg, #4338ca, #4f46e5);
+        color: #fff;
+    }
+
+    .auth-link {
+        color: #818cf8;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .auth-link:hover { color: #a5b4fc; text-decoration: underline; }
+
+    .divider-line {
+        border: none;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        margin: 1.5rem 0;
+    }
+
+    .demo-box {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.09);
+        border-radius: 0.75rem;
+        padding: 1rem 1.1rem;
+        font-size: 0.78rem;
+    }
+    .demo-title {
+        font-weight: 800;
+        color: #fbbf24;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        font-size: 0.72rem;
+        margin-bottom: 0.6rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .demo-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.25rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        color: rgba(255,255,255,0.65);
+    }
+    .demo-row:last-child { border-bottom: none; }
+    .demo-row .role { color: rgba(255,255,255,0.45); }
+    .demo-row .uname { color: #a5b4fc; font-weight: 700; font-family: monospace; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="glass-card">
+
+        <a href="/" class="auth-logo">
+            <i class="fa-solid fa-microchip"></i>AIOPS Portal
+        </a>
+        <p class="auth-subtitle">Sign in to access your Enterprise Support Portal</p>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert py-2 px-3 mb-3 border-0 text-white rounded-3 {% if message.tags == 'success' %}bg-success{% else %}bg-info{% endif %}" style="font-size:0.8rem;--bs-bg-opacity:0.85;">
+                <i class="fa-solid fa-circle-check me-1"></i> {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if form.errors %}
+        <div class="alert py-2 px-3 mb-3 border-0 bg-danger text-white rounded-3" style="font-size:0.8rem;--bs-bg-opacity:0.85;">
+            <i class="fa-solid fa-circle-exclamation me-1"></i> Invalid username or password.
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="mb-3 position-relative">
+                <span class="input-icon"><i class="fa-regular fa-user"></i></span>
+                <input type="text" name="username" class="glass-input" placeholder="Username" required autofocus id="id_username">
+            </div>
+            <div class="mb-4 position-relative">
+                <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
+                <input type="password" name="password" class="glass-input" placeholder="Password" required id="id_password">
+            </div>
+            <button type="submit" class="btn-signin mb-3">
+                <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In
+            </button>
+        </form>
+
+        <p class="text-center m-0" style="font-size:0.85rem; color:rgba(255,255,255,0.45);">
+            Don't have an account? <a href="{% url 'register' %}" class="auth-link">Register here</a>
+        </p>
+
+        <hr class="divider-line">
+
+        <div class="demo-box">
+            <div class="demo-title"><i class="fa-solid fa-key"></i> Demo Accounts <span style="font-weight:400;text-transform:none;font-size:0.7rem;color:rgba(255,255,255,0.4);">(Password: Password123)</span></div>
+            <div class="demo-row"><span class="role">Administrator</span><span class="uname">admin</span></div>
+            <div class="demo-row"><span class="role">IT Manager</span><span class="uname">manager_it</span></div>
+            <div class="demo-row"><span class="role">IT Support</span><span class="uname">support_1</span></div>
+            <div class="demo-row"><span class="role">Employee</span><span class="uname">employee_1</span></div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AIOPS Platform - Notifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Top Welcome Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold m-0" style="font-size: 1.35rem;">Notifications Inbox</h4>
+            <p class="text-muted m-0" style="font-size: 0.85rem;">Stay updated with incident assignments, approval requests, and SLA breaches.</p>
+        </div>
+        <button onclick="markAllRead()" class="btn btn-sm btn-outline-primary fw-semibold"><i class="fa-solid fa-envelope-open me-1"></i> Clear All Unread</button>
+    </div>
+
+    <!-- Notification Cards list -->
+    <div class="main-card">
+        <div class="main-card-header">
+            <h5 class="card-title-text"><i class="fa-solid fa-bell text-primary me-2"></i>Inbox Alerts</h5>
+        </div>
+        <div class="main-card-body p-0">
+            {% for notification in notifications %}
+            <div class="d-flex p-4 border-bottom last-border-0 align-items-start {% if not notification.is_read %}bg-light{% endif %}" id="notification-{{ notification.id }}">
+                <div class="metric-icon-wrapper me-3 mt-1" style="
+                    {% if notification.notification_type == 'INFO' %}
+                        background-color: #eff6ff; color: #3b82f6;
+                    {% elif notification.notification_type == 'ALERT' %}
+                        background-color: #fffbeb; color: #d97706;
+                    {% elif notification.notification_type == 'SLA_ESCALATION' %}
+                        background-color: #fef2f2; color: #ef4444;
+                    {% else %}
+                        background-color: #f3e8ff; color: #a855f7;
+                    {% endif %}
+                ">
+                    {% if notification.notification_type == 'INFO' %}
+                        <i class="fa-solid fa-circle-info"></i>
+                    {% elif notification.notification_type == 'ALERT' %}
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    {% elif notification.notification_type == 'SLA_ESCALATION' %}
+                        <i class="fa-solid fa-hourglass-half"></i>
+                    {% else %}
+                        <i class="fa-solid fa-signature"></i>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold" style="font-size: 0.95rem;">{{ notification.title }}</span>
+                        <span class="text-muted" style="font-size: 0.75rem;">{{ notification.created_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                    <p class="text-muted m-0 mb-2" style="font-size: 0.85rem; line-height: 1.45;">{{ notification.message }}</p>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge text-uppercase px-2 py-1" style="
+                            font-size: 0.65rem; font-weight: 700;
+                            {% if notification.notification_type == 'INFO' %}
+                                background-color: #dbeafe; color: #1e40af;
+                            {% elif notification.notification_type == 'ALERT' %}
+                                background-color: #fef3c7; color: #92400e;
+                            {% elif notification.notification_type == 'SLA_ESCALATION' %}
+                                background-color: #fee2e2; color: #991b1b;
+                            {% else %}
+                                background-color: #f3e8ff; color: #6b21a8;
+                            {% endif %}
+                        ">
+                            {{ notification.get_notification_type_display }}
+                        </span>
+                        {% if notification.link %}
+                            <a href="{{ notification.link }}" class="insight-link text-decoration-none" style="font-size: 0.775rem;">Take Action <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5 text-muted">
+                <i class="fa-regular fa-bell-slash fs-3 mb-2 d-block text-muted"></i>
+                You have no notifications in your inbox.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    async function markAllRead() {
+        try {
+            const response = await fetch('/api/notifications/read-all/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert("Failed to mark all as read.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error.");
+        }
+    }
+</script>
+{% endblock %}

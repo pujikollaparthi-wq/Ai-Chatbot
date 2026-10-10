@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+
+{% block title %}AIOPS Platform - Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-list-group .list-group-item-action {
+        background: transparent !important;
+        color: var(--text-muted) !important;
+        border-radius: 0.5rem !important;
+        margin-bottom: 0.35rem;
+        border: none !important;
+        transition: all 0.25s ease;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    .settings-list-group .list-group-item-action.active {
+        background-color: var(--primary) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+    .settings-list-group .list-group-item-action:hover:not(.active) {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        color: var(--text-main) !important;
+    }
+    .settings-list-group .list-group-item-action i {
+        width: 20px;
+    }
+    .form-control:read-only {
+        background-color: rgba(255, 255, 255, 0.02) !important;
+        color: var(--text-muted) !important;
+        border-color: var(--border-color) !important;
+        cursor: not-allowed;
+    }
+    .form-label {
+        color: var(--text-main) !important;
+        font-weight: 700 !important;
+        font-size: 0.85rem !important;
+    }
+    .main-card-body .text-muted {
+        color: var(--text-muted) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="mb-4">
+        <h4 class="fw-bold m-0 text-white" style="font-size: 1.35rem;">Platform Settings</h4>
+        <span class="text-muted" style="font-size: 0.85rem;">Manage your profile, preferences, and notifications.</span>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <!-- Settings Sidebar -->
+            <div class="main-card">
+                <div class="list-group list-group-flush settings-list-group p-2" id="settings-list" role="tablist" style="background: transparent;">
+                    <a class="list-group-item list-group-item-action active" id="list-profile-list" data-bs-toggle="list" href="#list-profile" role="tab" aria-controls="list-profile">
+                        <i class="fa-solid fa-user me-2"></i> Profile
+                    </a>
+                    <a class="list-group-item list-group-item-action" id="list-notifications-list" data-bs-toggle="list" href="#list-notifications" role="tab" aria-controls="list-notifications">
+                        <i class="fa-solid fa-bell me-2"></i> Notifications
+                    </a>
+                    <a class="list-group-item list-group-item-action" id="list-appearance-list" data-bs-toggle="list" href="#list-appearance" role="tab" aria-controls="list-appearance">
+                        <i class="fa-solid fa-palette me-2"></i> Appearance
+                    </a>
+                    <a class="list-group-item list-group-item-action" id="list-security-list" data-bs-toggle="list" href="#list-security" role="tab" aria-controls="list-security">
+                        <i class="fa-solid fa-shield-halved me-2"></i> Security
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Message Alerts -->
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert py-2 px-3 mb-3 border-0 text-white rounded-3 {% if message.tags == 'success' %}bg-success{% else %}bg-danger{% endif %}" style="font-size: 0.85rem; --bs-bg-opacity: 0.85;">
+                <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %} me-2"></i> {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="tab-content" id="settings-tabContent">
+                <!-- Profile Settings Card -->
+                <div class="tab-pane fade show active" id="list-profile" role="tabpanel" aria-labelledby="list-profile-list">
+                    <div class="main-card">
+                        <div class="main-card-header border-bottom border-secondary pb-3 mb-3">
+                            <h5 class="fw-bold m-0 text-white"><i class="fa-solid fa-user-circle text-primary me-2"></i>Personal Information</h5>
+                        </div>
+                        <div class="main-card-body">
+                            <div class="d-flex align-items-center mb-4 pb-3 border-bottom border-secondary">
+                                <div class="position-relative me-4">
+                                    <img src="{{ avatar_url }}" alt="Profile" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid var(--border-color);">
+                                    <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Change Picture" onclick="document.getElementById('avatarFileInput').click();">
+                                        <i class="fa-solid fa-camera" style="font-size: 0.7rem;"></i>
+                                    </button>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-white mb-1">{{ user.get_full_name|default:user.username }}</h6>
+                                    <p class="m-0 fw-semibold text-white-50" style="font-size: 0.85rem; color: var(--text-muted) !important;">{{ user.email }}</p>
+                                    <div class="mt-2">
+                                        <form id="avatarForm" method="POST" action="{% url 'settings' %}" enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="avatar">
+                                            <input type="file" id="avatarFileInput" name="avatar" accept="image/*" style="display: none;" onchange="document.getElementById('avatarForm').submit();">
+                                            <button type="button" class="btn btn-outline-primary btn-sm px-3" style="font-size: 0.75rem;" onclick="document.getElementById('avatarFileInput').click();">Change Picture</button>
+                                            <a href="{% url 'settings' %}?remove_avatar=true" class="btn btn-link text-danger fw-bold btn-sm text-decoration-none ms-2" style="font-size: 0.75rem; color: var(--danger) !important;">Remove</a>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <form method="POST" action="{% url 'settings' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="profile">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-white" style="font-size: 0.8rem; color: var(--text-main) !important;">First Name</label>
+                                        <input type="text" name="first_name" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" value="{{ user.first_name }}" {% if user.role != 'ADMIN' %}readonly{% endif %}>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-white" style="font-size: 0.8rem; color: var(--text-main) !important;">Last Name</label>
+                                        <input type="text" name="last_name" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" value="{{ user.last_name }}" {% if user.role != 'ADMIN' %}readonly{% endif %}>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-white" style="font-size: 0.8rem; color: var(--text-main) !important;">Email Address</label>
+                                        <input type="email" name="email" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" value="{{ user.email }}" {% if user.role != 'ADMIN' %}readonly{% endif %}>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-white" style="font-size: 0.8rem; color: var(--text-main) !important;">Username</label>
+                                        <input type="text" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" value="{{ user.username }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-white" style="font-size: 0.8rem; color: var(--text-main) !important;">Role</label>
+                                        <input type="text" class="form-control text-white fw-bold" style="background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--primary) !important;" value="{{ user.get_role_display }}" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-white" style="font-size: 0.8rem; color: var(--text-main) !important;">Department</label>
+                                        <input type="text" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" value="{{ user.department.name|default:'N/A' }}" readonly>
+                                    </div>
+                                </div>
+                                {% if user.role == 'ADMIN' %}
+                                <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">
+                                    <i class="fa-solid fa-floppy-disk me-2"></i>Save Profile
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-primary btn-sm px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#profileRequestModal">
+                                    <i class="fa-solid fa-paper-plane me-2"></i>Request Profile Update
+                                </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications Settings Card -->
+                <div class="tab-pane fade" id="list-notifications" role="tabpanel" aria-labelledby="list-notifications-list">
+                    <div class="main-card">
+                        <div class="main-card-header border-bottom border-secondary pb-3 mb-3">
+                            <h5 class="fw-bold m-0 text-white"><i class="fa-solid fa-bell text-info me-2"></i>Notification Preferences</h5>
+                        </div>
+                        <div class="main-card-body">
+                            <form method="POST" action="{% url 'settings' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="notifications">
+                                
+                                <div class="mb-4">
+                                    <h6 class="text-white fw-bold mb-3" style="font-size: 0.95rem;">Email Notifications</h6>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="email_incidents" id="emailIncidents" {% if notif_email_incidents %}checked{% endif %} style="background-color: var(--primary); cursor: pointer; transform: scale(1.15);">
+                                        <label class="form-check-label text-white ms-2" for="emailIncidents" style="font-size: 0.85rem;">Notify on incident assignments and status updates</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="email_approvals" id="emailApprovals" {% if notif_email_approvals %}checked{% endif %} style="background-color: var(--primary); cursor: pointer; transform: scale(1.15);">
+                                        <label class="form-check-label text-white ms-2" for="emailApprovals" style="font-size: 0.85rem;">Notify on pending approval requests</label>
+                                    </div>
+                                </div>
+
+                                <hr class="border-secondary my-4">
+
+                                <div class="mb-4">
+                                    <h6 class="text-white fw-bold mb-3" style="font-size: 0.95rem;">In-App Audio</h6>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="in_app_sounds" id="inAppSounds" {% if notif_in_app_sounds %}checked{% endif %} style="background-color: var(--primary); cursor: pointer; transform: scale(1.15);">
+                                        <label class="form-check-label text-white ms-2" for="inAppSounds" style="font-size: 0.85rem;">Play sound effects for new alerts/notifications</label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">
+                                    Save Preferences
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appearance Settings Card -->
+                <div class="tab-pane fade" id="list-appearance" role="tabpanel" aria-labelledby="list-appearance-list">
+                    <div class="main-card">
+                        <div class="main-card-header border-bottom border-secondary pb-3 mb-3">
+                            <h5 class="fw-bold m-0 text-white"><i class="fa-solid fa-palette text-warning me-2"></i>Appearance Settings</h5>
+                        </div>
+                        <div class="main-card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold text-white m-0">Dark Mode</h6>
+                                    <span class="text-muted" style="font-size: 0.8rem;">Toggle between light and dark themes.</span>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="themeToggle" style="background-color: var(--primary); cursor: pointer; transform: scale(1.25);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings Card -->
+                <div class="tab-pane fade" id="list-security" role="tabpanel" aria-labelledby="list-security-list">
+                    <div class="main-card">
+                        <div class="main-card-header border-bottom border-secondary pb-3 mb-3">
+                            <h5 class="fw-bold m-0 text-white"><i class="fa-solid fa-shield-halved text-danger me-2"></i>Security Settings</h5>
+                        </div>
+                        <div class="main-card-body">
+                            <form method="POST" action="{% url 'settings' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="security">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-white" style="font-size: 0.8rem; color: var(--text-main) !important;">Current Password</label>
+                                    <input type="password" name="current_password" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-white" style="font-size: 0.8rem; color: var(--text-main) !important;">New Password</label>
+                                    <input type="password" name="new_password" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" required>
+                                    <small class="text-muted" style="font-size: 0.75rem; color: var(--text-muted) !important;">Password must be at least 8 characters long.</small>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold text-white" style="font-size: 0.8rem; color: var(--text-main) !important;">Confirm New Password</label>
+                                    <input type="password" name="confirm_password" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" required>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-danger btn-sm px-4 fw-bold">
+                                    Change Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Update Request Modal -->
+<div class="modal fade" id="profileRequestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 1rem;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-white">
+                    <i class="fa-solid fa-paper-plane text-primary me-2"></i>Request Profile Update
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'settings' %}">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="profile_request">
+                <div class="modal-body pt-3">
+                    <p class="text-muted mb-4" style="font-size: 0.85rem;">Fill in the fields you want to update. Leave blank if no change needed. Your request will be sent to the administrator.</p>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-white fw-bold" style="font-size: 0.8rem;">New First Name</label>
+                            <input type="text" name="req_first_name" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" placeholder="{{ user.first_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white fw-bold" style="font-size: 0.8rem;">New Last Name</label>
+                            <input type="text" name="req_last_name" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" placeholder="{{ user.last_name }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white fw-bold" style="font-size: 0.8rem;">New Email Address</label>
+                        <input type="email" name="req_email" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" placeholder="{{ user.email }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white fw-bold" style="font-size: 0.8rem;">Reason for Update <span class="text-danger">*</span></label>
+                        <textarea name="req_reason" rows="3" class="form-control text-white" style="background: var(--bg-primary); border: 1px solid var(--border-color);" placeholder="e.g. Name changed after marriage, email update needed..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">
+                        <i class="fa-solid fa-paper-plane me-2"></i>Send Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Tab preservation logic
+        const activeTab = localStorage.getItem('activeSettingsTab');
+        if (activeTab) {
+            const targetTabEl = document.querySelector(`a[href="${activeTab}"]`);
+            if (targetTabEl) {
+                const tabTrigger = new bootstrap.Tab(targetTabEl);
+                tabTrigger.show();
+            }
+        }
+
+        // Listen for tab clicks to save the state
+        const tabLinks = document.querySelectorAll('a[data-bs-toggle="list"]');
+        tabLinks.forEach(link => {
+            link.addEventListener('shown.bs.tab', (e) => {
+                localStorage.setItem('activeSettingsTab', e.target.getAttribute('href'));
+            });
+        });
+
+        // Theme toggle logic
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // Check current theme
+        if (document.documentElement.getAttribute('data-theme') !== 'light') {
+            themeToggle.checked = true;
+        } else {
+            themeToggle.checked = false;
+        }
+
+        themeToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    });
+</script>
+{% endblock %}

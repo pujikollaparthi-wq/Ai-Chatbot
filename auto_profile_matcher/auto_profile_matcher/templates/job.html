@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Listings</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: url('/static/job_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 50px;
+            font-family: Arial, sans-serif;
+        }
+
+        .job-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .job-card {
+            margin-bottom: 20px;
+        }
+
+        .job-card h5 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="job-container">
+        <h1>Available Jobs</h1>
+
+        <div class="card job-card">
+            <div class="card-body">
+                <h5 class="card-title">Software Developer</h5>
+                <p class="card-text">Location: Hyderabad | Experience: 2-4 years</p>
+                <a href="#" class="btn btn-primary">Apply Now</a>
+            </div>
+        </div>
+
+        <div class="card job-card">
+            <div class="card-body">
+                <h5 class="card-title">Data Analyst</h5>
+                <p class="card-text">Location: Bangalore | Experience: 1-3 years</p>
+                <a href="#" class="btn btn-primary">Apply Now</a>
+            </div>
+        </div>
+
+        <div class="card job-card">
+            <div class="card-body">
+                <h5 class="card-title">UI/UX Designer</h5>
+                <p class="card-text">Location: Pune | Experience: 3+ years</p>
+                <a href="#" class="btn btn-primary">Apply Now</a>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

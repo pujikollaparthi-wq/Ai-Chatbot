@@ -1,0 +1,728 @@
+{% extends 'base.html' %}
+
+{% block title %}AIOPS Platform - {{ asset.asset_tag }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .asset-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        border-radius: 1rem;
+        padding: 2rem 2.5rem;
+        color: #ffffff;
+        margin-bottom: 1.75rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .asset-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -15%;
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .asset-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -40%;
+        left: -10%;
+        width: 280px;
+        height: 280px;
+        background: radial-gradient(circle, rgba(79, 70, 229, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .hero-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.825rem;
+        color: #94a3b8;
+        margin-bottom: 1rem;
+    }
+    .hero-breadcrumb a {
+        color: #94a3b8;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .hero-breadcrumb a:hover {
+        color: #e2e8f0;
+    }
+    .hero-asset-tag {
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: #22d3ee;
+        text-transform: uppercase;
+        margin-bottom: 0.35rem;
+    }
+    .hero-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    .hero-subtitle {
+        font-size: 0.9rem;
+        color: #cbd5e1;
+        line-height: 1.5;
+    }
+    .hero-meta-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+        position: relative;
+        z-index: 1;
+    }
+    .meta-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.85rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .meta-pill.status-in_stock { background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.3); color: #6ee7b7; }
+    .meta-pill.status-in_use { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.3); color: #fcd34d; }
+    .meta-pill.status-retired { background: rgba(100, 116, 139, 0.2); border-color: rgba(100, 116, 139, 0.3); color: #cbd5e1; }
+    .meta-pill.status-damaged { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5; }
+    .meta-pill.type-pill { background: rgba(6, 182, 212, 0.15); border-color: rgba(6, 182, 212, 0.25); color: #67e8f9; }
+
+    .asset-icon-lg {
+        width: 72px;
+        height: 72px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(8px);
+        flex-shrink: 0;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.75rem;
+    }
+    @media (max-width: 992px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .info-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .info-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-main);
+    }
+    .info-section-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Status visual indicator */
+    .status-indicator {
+        text-align: center;
+        padding: 1.5rem;
+    }
+    .status-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        position: relative;
+    }
+    .status-circle.in_stock {
+        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        border: 3px solid #10b981;
+    }
+    .status-circle.in_use {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border: 3px solid #f59e0b;
+    }
+    .status-circle.retired {
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        border: 3px solid #94a3b8;
+    }
+    .status-circle.damaged {
+        background: linear-gradient(135deg, #fef2f2, #fecaca);
+        border: 3px solid #ef4444;
+    }
+    .status-circle-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+    }
+    .status-circle-text {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    /* Allocation history timeline */
+    .alloc-timeline {
+        position: relative;
+        padding-left: 1.5rem;
+    }
+    .alloc-timeline::before {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(180deg, var(--info) 0%, var(--border-color) 100%);
+    }
+    .alloc-item {
+        position: relative;
+        padding-bottom: 1.25rem;
+    }
+    .alloc-item:last-child {
+        padding-bottom: 0;
+    }
+    .alloc-dot {
+        position: absolute;
+        left: -1.5rem;
+        top: 2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 3px solid #ffffff;
+    }
+    .alloc-dot.active { background: var(--success); box-shadow: 0 0 0 2px var(--success); }
+    .alloc-dot.returned { background: #94a3b8; box-shadow: 0 0 0 2px #94a3b8; }
+    .alloc-content {
+        padding-left: 0.5rem;
+    }
+    .alloc-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+    .alloc-meta {
+        font-size: 0.725rem;
+        color: var(--text-muted);
+        margin-top: 0.15rem;
+    }
+
+    /* History log list */
+    .history-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .history-item:last-child {
+        border-bottom: none;
+    }
+    .history-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+    .history-icon.allocated { background: #dbeafe; color: #2563eb; }
+    .history-icon.returned { background: #ecfdf5; color: #059669; }
+    .history-icon.default { background: #f1f5f9; color: #64748b; }
+    .history-text {
+        flex-grow: 1;
+    }
+    .history-action {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+    .history-details {
+        font-size: 0.775rem;
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+    .history-time {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    /* Value badge */
+    .cost-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        border: 1px solid #93c5fd;
+        color: #1e40af;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    /* Action buttons */
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1rem;
+        border-radius: 0.65rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+        width: 100%;
+        text-decoration: none;
+    }
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+    .action-btn.primary { background: var(--primary); color: #ffffff; }
+    .action-btn.danger { background: var(--danger); color: #ffffff; }
+    .action-btn.outline {
+        background: transparent;
+        border: 1.5px solid var(--border-color);
+        color: var(--text-main);
+    }
+    .action-btn.outline:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary);
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 1.25rem;
+        transition: gap 0.2s ease;
+    }
+    .back-link:hover {
+        gap: 0.75rem;
+        color: #3b30bd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+    <!-- Back Link -->
+    <a href="{% url 'assets-list' %}" class="back-link">
+        <i class="fa-solid fa-arrow-left"></i> Back to Assets
+    </a>
+
+    <!-- Hero Section -->
+    <div class="asset-hero">
+        <div class="hero-breadcrumb">
+            <a href="{% url 'assets-list' %}">Assets</a>
+            <i class="fa-solid fa-chevron-right" style="font-size: 0.6rem;"></i>
+            <span>{{ asset.asset_tag }}</span>
+        </div>
+        <div class="d-flex align-items-center gap-3" style="position: relative; z-index: 1;">
+            <div class="asset-icon-lg">
+                {% if asset.asset_type == 'LAPTOP' %}
+                    <i class="fa-solid fa-laptop"></i>
+                {% elif asset.asset_type == 'MOBILE' %}
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                {% elif asset.asset_type == 'MONITOR' %}
+                    <i class="fa-solid fa-desktop"></i>
+                {% elif asset.asset_type == 'SOFTWARE' %}
+                    <i class="fa-solid fa-compact-disc"></i>
+                {% else %}
+                    <i class="fa-solid fa-box"></i>
+                {% endif %}
+            </div>
+            <div>
+                <div class="hero-asset-tag">{{ asset.asset_tag }}</div>
+                <h2 class="hero-title">{{ asset.name }}</h2>
+                <div class="hero-subtitle">Serial: {{ asset.serial_number }}</div>
+            </div>
+        </div>
+        <div class="hero-meta-pills">
+            <span class="meta-pill type-pill">
+                <i class="fa-solid fa-tag"></i> {{ asset.get_asset_type_display }}
+            </span>
+            <span class="meta-pill status-{{ asset.status|lower }}">
+                <i class="fa-solid fa-circle-dot"></i> {{ asset.get_status_display }}
+            </span>
+            <span class="meta-pill">
+                <i class="fa-solid fa-dollar-sign"></i> ${{ asset.cost }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Main Detail Grid -->
+    <div class="detail-grid">
+        <!-- Left Column -->
+        <div>
+            <!-- Asset Information Card -->
+            <div class="main-card">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-circle-info text-info me-2"></i>Asset Information</h5>
+                </div>
+                <div class="main-card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Asset Tag</span>
+                            <span class="info-value" style="color: var(--primary); font-weight: 700;">{{ asset.asset_tag }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Asset Name</span>
+                            <span class="info-value">{{ asset.name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Type</span>
+                            <span class="info-value">
+                                <span class="badge bg-light text-dark border">{{ asset.get_asset_type_display }}</span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status</span>
+                            <span class="info-value">
+                                <span class="badge-status {% if asset.status == 'IN_USE' %}in-progress{% elif asset.status == 'IN_STOCK' %}resolved{% else %}closed{% endif %}">
+                                    {{ asset.get_status_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Serial Number</span>
+                            <span class="info-value" style="font-family: monospace;">{{ asset.serial_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Cost</span>
+                            <span class="info-value">
+                                <span class="cost-badge"><i class="fa-solid fa-indian-rupee-sign" style="font-size: 0.85rem;"></i>${{ asset.cost }}</span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Registered On</span>
+                            <span class="info-value">{{ asset.created_at|date:"M d, Y h:i A" }}</span>
+                        </div>
+                        {% if current_allocation %}
+                        <div class="info-item">
+                            <span class="info-label">Currently Assigned To</span>
+                            <span class="info-value">
+                                <i class="fa-solid fa-user text-primary me-1" style="font-size: 0.75rem;"></i>
+                                {{ current_allocation.assigned_to.get_full_name|default:current_allocation.assigned_to.username }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Allocation History Card -->
+            <div class="main-card">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-users-gear text-primary me-2"></i>Allocation History</h5>
+                </div>
+                <div class="main-card-body">
+                    {% if allocations %}
+                    <div class="alloc-timeline">
+                        {% for alloc in allocations %}
+                        <div class="alloc-item">
+                            <div class="alloc-dot {% if alloc.status == 'ACTIVE' %}active{% else %}returned{% endif %}"></div>
+                            <div class="alloc-content">
+                                <div class="alloc-title">
+                                    {% if alloc.status == 'ACTIVE' %}
+                                        <i class="fa-solid fa-circle text-success me-1" style="font-size: 0.5rem; vertical-align: middle;"></i>
+                                    {% endif %}
+                                    Assigned to {{ alloc.assigned_to.get_full_name|default:alloc.assigned_to.username }}
+                                </div>
+                                <div class="alloc-meta">
+                                    Allocated by {{ alloc.allocated_by.get_full_name|default:alloc.allocated_by.username|default:"System" }}
+                                    on {{ alloc.allocated_at|date:"M d, Y h:i A" }}
+                                </div>
+                                {% if alloc.returned_at %}
+                                <div class="alloc-meta">
+                                    <i class="fa-solid fa-rotate-left me-1"></i> Returned on {{ alloc.returned_at|date:"M d, Y h:i A" }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3" style="font-size: 0.85rem;">
+                        <i class="fa-solid fa-inbox me-1"></i> No allocation records yet.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Asset Audit Log Card -->
+            <div class="main-card">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-clock-rotate-left text-warning me-2"></i>Audit Log</h5>
+                </div>
+                <div class="main-card-body">
+                    {% if history %}
+                        {% for log in history %}
+                        <div class="history-item">
+                            <div class="history-icon {% if log.action == 'Allocated' %}allocated{% elif log.action == 'Returned' %}returned{% else %}default{% endif %}">
+                                {% if log.action == 'Allocated' %}
+                                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                                {% elif log.action == 'Returned' %}
+                                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-pen"></i>
+                                {% endif %}
+                            </div>
+                            <div class="history-text">
+                                <div class="history-action">{{ log.action }}</div>
+                                {% if log.details %}
+                                <div class="history-details">{{ log.details }}</div>
+                                {% endif %}
+                                {% if log.performed_by %}
+                                <div class="history-details">By: {{ log.performed_by.get_full_name|default:log.performed_by.username }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="history-time">{{ log.timestamp|date:"M d, Y h:i A" }}</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="text-center text-muted py-3" style="font-size: 0.85rem;">
+                        <i class="fa-solid fa-inbox me-1"></i> No audit history recorded.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+            <!-- Status Card -->
+            <div class="main-card">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-signal text-success me-2"></i>Current Status</h5>
+                </div>
+                <div class="main-card-body">
+                    <div class="status-indicator">
+                        <div class="status-circle {{ asset.status|lower }}">
+                            <div class="status-circle-icon">
+                                {% if asset.status == 'IN_STOCK' %}
+                                    <i class="fa-solid fa-box-open" style="color: #059669;"></i>
+                                {% elif asset.status == 'IN_USE' %}
+                                    <i class="fa-solid fa-user-check" style="color: #d97706;"></i>
+                                {% elif asset.status == 'RETIRED' %}
+                                    <i class="fa-solid fa-ban" style="color: #64748b;"></i>
+                                {% elif asset.status == 'DAMAGED' %}
+                                    <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i>
+                                {% endif %}
+                            </div>
+                            <div class="status-circle-text" style="color: {% if asset.status == 'IN_STOCK' %}#059669{% elif asset.status == 'IN_USE' %}#d97706{% elif asset.status == 'RETIRED' %}#64748b{% else %}#dc2626{% endif %};">
+                                {{ asset.get_status_display }}
+                            </div>
+                        </div>
+                        {% if current_allocation %}
+                        <div style="font-size: 0.85rem; color: var(--text-main); font-weight: 600;">
+                            <i class="fa-solid fa-user me-1 text-primary"></i>
+                            {{ current_allocation.assigned_to.get_full_name|default:current_allocation.assigned_to.username }}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                            Since {{ current_allocation.allocated_at|date:"M d, Y" }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="main-card">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-bolt text-warning me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="main-card-body">
+                    <div class="action-buttons">
+                        {% if asset.status == 'IN_STOCK' and request.user.role == 'ADMIN' %}
+                        <button class="action-btn primary" onclick="allocateAssetPrompt()">
+                            <i class="fa-solid fa-user-plus"></i> Allocate Asset
+                        </button>
+                        {% endif %}
+
+                        {% if asset.status == 'IN_USE' and request.user.role == 'ADMIN' %}
+                        <button class="action-btn danger" onclick="returnAsset()">
+                            <i class="fa-solid fa-rotate-left"></i> Return Asset
+                        </button>
+                        {% endif %}
+
+                        <a href="{% url 'assets-list' %}" class="action-btn outline">
+                            <i class="fa-solid fa-list"></i> Back to Catalog
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Asset Value Card -->
+            <div class="main-card">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-chart-pie text-info me-2"></i>Asset Value</h5>
+                </div>
+                <div class="main-card-body text-center">
+                    <div class="cost-badge" style="font-size: 1.5rem; padding: 0.75rem 1.5rem;">
+                        ${{ asset.cost }}
+                    </div>
+                    <div class="mt-2" style="font-size: 0.8rem; color: var(--text-muted);">
+                        {{ asset.get_asset_type_display }} • {{ asset.asset_tag }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Allocate Modal -->
+<div class="modal fade" id="allocateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="font-size: 1rem;">
+                    <i class="fa-solid fa-laptop text-primary me-1"></i> Allocate {{ asset.asset_tag }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="allocateForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.8rem;">Select Employee (Recipient)</label>
+                        <select class="form-select form-select-sm" id="allocate_user_id" required>
+                            <option value="">-- Choose Employee --</option>
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-sm btn-primary px-3" onclick="submitAllocation()">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let bsAllocateModal;
+
+    async function allocateAssetPrompt() {
+        // Dynamically fetch users to populate list
+        try {
+            const response = await fetch('/api/accounts/users/');
+            if (response.ok) {
+                const users = await response.json();
+                const select = document.getElementById('allocate_user_id');
+                select.innerHTML = '<option value="">-- Choose Employee --</option>';
+                users.results.forEach(user => {
+                    select.innerHTML += `<option value="${user.id}">${user.username} (${user.role_display})</option>`;
+                });
+            }
+        } catch(e) {}
+
+        bsAllocateModal = new bootstrap.Modal(document.getElementById('allocateModal'));
+        bsAllocateModal.show();
+    }
+
+    async function submitAllocation() {
+        const userId = document.getElementById('allocate_user_id').value;
+
+        if (!userId) {
+            alert('Please select an employee.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/assets/catalog/{{ asset.id }}/allocate/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ assigned_to: userId })
+            });
+            if (response.ok) {
+                bsAllocateModal.hide();
+                location.reload();
+            } else {
+                const err = await response.json();
+                alert(err.error || 'Failed to allocate asset.');
+            }
+        } catch(e) {
+            alert('An error occurred.');
+        }
+    }
+
+    async function returnAsset() {
+        if (!confirm('Are you sure you want to return this asset?')) return;
+
+        try {
+            const response = await fetch(`/api/assets/catalog/{{ asset.id }}/return/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            if (response.ok) {
+                location.reload();
+            } else {
+                const err = await response.json();
+                alert(err.error || 'Failed to return asset.');
+            }
+        } catch(e) {
+            alert('An error occurred.');
+        }
+    }
+</script>
+{% endblock %}

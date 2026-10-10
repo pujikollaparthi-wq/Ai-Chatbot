@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AIOPS Platform - IT Support Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Top Welcome Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold m-0" style="font-size: 1.35rem;">IT Support Operations Queue</h4>
+            <p class="text-muted m-0" style="font-size: 0.85rem;">Claim tickets, update SLA statuses, and resolve service desk requests.</p>
+        </div>
+        <span class="badge bg-light text-muted border px-3 py-2 fw-semibold"><i class="fa-solid fa-headset me-1"></i> Support Agent Access</span>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="row g-4 mb-4">
+        <!-- Metric 1: My Active Queue -->
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">My Assigned Tickets</span>
+                    <div class="metric-icon-wrapper" style="background-color: #eff6ff; color: #3b82f6;">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
+                </div>
+                <div class="metric-value">{{ my_incidents.count }}</div>
+                <div class="metric-footer">
+                    <span class="text-muted">Active tickets in progress</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric 2: Unassigned Tickets -->
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Unassigned Pool</span>
+                    <div class="metric-icon-wrapper" style="background-color: #fffbeb; color: #d97706;">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                </div>
+                <div class="metric-value">{{ unassigned_incidents.count }}</div>
+                <div class="metric-footer">
+                    <span class="text-muted">Tickets awaiting support claim</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric 3: My Resolved Today -->
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">My Resolved Queue</span>
+                    <div class="metric-icon-wrapper" style="background-color: #ecfdf5; color: #10b981;">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+                <div class="metric-value">{{ resolved_incidents.count }}</div>
+                <div class="metric-footer">
+                    <span class="text-muted">Recently completed tickets</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid Section -->
+    <div class="row g-4 mb-4">
+        <!-- Left: My Active Queue & Resolved Tickets -->
+        <div class="col-lg-8">
+            <!-- Part 1: My Assigned Queue -->
+            <div class="main-card mb-4">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-headset text-primary me-2"></i>My Active Work Queue</h5>
+                </div>
+                <div class="main-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Short Description</th>
+                                    <th>Caller</th>
+                                    <th>Priority</th>
+                                    <th>SLA Due</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for incident in my_incidents %}
+                                <tr>
+                                    <td class="fw-bold text-primary">{{ incident.ticket_number }}</td>
+                                    <td>
+                                        <div class="fw-bold" style="font-size: 0.875rem;">{{ incident.title }}</div>
+                                        <div class="text-muted truncate-text" style="font-size: 0.775rem;">{{ incident.description|truncatechars:60 }}</div>
+                                    </td>
+                                    <td class="fw-semibold">{{ incident.caller.get_full_name|default:incident.caller.username }}</td>
+                                    <td>
+                                        <span class="badge-priority {{ incident.priority|lower }}">
+                                            {{ incident.get_priority_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-danger fw-semibold" style="font-size: 0.8rem;">
+                                        <i class="fa-regular fa-clock me-1"></i> {{ incident.sla_due|date:"M d, H:i"|default:"Within SLA" }}
+                                    </td>
+                                    <td>
+                                        <button onclick="openResolveModal('{{ incident.id }}')" class="btn btn-sm btn-success px-2 py-1" style="font-size: 0.75rem;"><i class="fa-solid fa-circle-check"></i> Resolve</button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-circle-check fs-4 mb-2 d-block text-success"></i>
+                                        Your queue is empty! Claim some unassigned tickets.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Part 2: My Recently Resolved Queue -->
+            <div class="main-card mb-0">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-circle-check text-success me-2"></i>My Resolved Tickets</h5>
+                </div>
+                <div class="main-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Short Description</th>
+                                    <th>Caller</th>
+                                    <th>Resolution Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for incident in resolved_incidents %}
+                                <tr>
+                                    <td class="fw-bold text-primary">{{ incident.ticket_number }}</td>
+                                    <td class="fw-semibold">{{ incident.title }}</td>
+                                    <td class="text-muted">{{ incident.caller.get_full_name|default:incident.caller.username }}</td>
+                                    <td class="text-muted" style="font-size: 0.8rem;">{{ incident.resolved_at|date:"M d, Y H:i" }}</td>
+                                    <td><span class="badge-status resolved">Resolved</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        No resolved tickets recorded recently.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Unassigned Pool -->
+        <div class="col-lg-4">
+            <div class="main-card mb-0">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-boxes-stacked text-warning me-2"></i>Unassigned Pool</h5>
+                </div>
+                <div class="main-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Incident Info</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for incident in unassigned_incidents %}
+                                <tr id="unassigned-row-{{ incident.id }}">
+                                    <td>
+                                        <div class="fw-bold text-primary" style="font-size: 0.8rem;">{{ incident.ticket_number }}</div>
+                                        <div class="fw-semibold mt-1" style="font-size: 0.85rem;">{{ incident.title }}</div>
+                                        <div class="d-flex align-items-center mt-2 gap-2">
+                                            <span class="badge-priority {{ incident.priority|lower }}" style="font-size: 0.65rem;">{{ incident.get_priority_display }}</span>
+                                            <span class="badge bg-light text-dark border" style="font-size: 0.65rem;">{{ incident.category }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="vertical-middle">
+                                        <button onclick="claimTicket('{{ incident.id }}')" class="btn btn-sm btn-primary px-2 py-1" style="font-size: 0.75rem; white-space: nowrap;"><i class="fa-solid fa-hand-holding"></i> Claim</button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-smile-wink fs-4 mb-2 d-block text-success"></i>
+                                        No unassigned tickets in pool! Good job.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resolve Ticket Modal -->
+<div class="modal fade" id="resolveModal" tabindex="-1" aria-labelledby="resolveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="resolveModalLabel">Resolve Incident</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="resolveIncidentId">
+                <div class="mb-3">
+                    <label for="resolutionNotes" class="form-label fw-semibold">Resolution Notes <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="resolutionNotes" rows="3" placeholder="Describe how the issue was resolved..." required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="rootCause" class="form-label fw-semibold">Root Cause Analysis (RCA)</label>
+                    <textarea class="form-control" id="rootCause" rows="2" placeholder="Describe the underlying cause of this issue..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" onclick="submitResolution()" class="btn btn-success btn-sm">Confirm Resolution</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let resolveModalInstance = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        resolveModalInstance = new bootstrap.Modal(document.getElementById('resolveModal'));
+    });
+
+    async function claimTicket(incidentId) {
+        try {
+            const response = await fetch(`/api/service_desk/incidents/${incidentId}/assign-to-me/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+
+            if (response.ok) {
+                const row = document.getElementById(`unassigned-row-${incidentId}`);
+                if (row) {
+                    row.style.transition = 'opacity 0.5s';
+                    row.style.opacity = '0';
+                    setTimeout(() => {
+                        row.remove();
+                        location.reload();
+                    }, 500);
+                }
+            } else {
+                const data = await response.json();
+                alert(`Error: ${data.error || 'Failed to claim ticket'}`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error. Please try again.");
+        }
+    }
+
+    function openResolveModal(incidentId) {
+        document.getElementById('resolveIncidentId').value = incidentId;
+        document.getElementById('resolutionNotes').value = '';
+        document.getElementById('rootCause').value = '';
+        resolveModalInstance.show();
+    }
+
+    async function submitResolution() {
+        const incidentId = document.getElementById('resolveIncidentId').value;
+        const resolutionNotes = document.getElementById('resolutionNotes').value.trim();
+        const rootCause = document.getElementById('rootCause').value.trim();
+
+        if (!resolutionNotes) {
+            alert("Resolution notes are required.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/service_desk/incidents/${incidentId}/resolve/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    resolution_notes: resolutionNotes,
+                    root_cause: rootCause
+                })
+            });
+
+            if (response.ok) {
+                resolveModalInstance.hide();
+                location.reload();
+            } else {
+                const data = await response.json();
+                alert(`Error: ${data.error || 'Failed to resolve incident'}`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error. Please try again.");
+        }
+    }
+</script>
+{% endblock %}

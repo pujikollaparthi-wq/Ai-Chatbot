@@ -1,0 +1,965 @@
+{% extends 'base.html' %}
+
+{% block title %}AIOPS Platform - {{ incident.ticket_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Styling Revamp for Sleek Glassmorphism & Micro-animations */
+    .detail-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+        border-radius: 1rem;
+        padding: 2.25rem 2.5rem;
+        color: #ffffff;
+        margin-bottom: 1.75rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: var(--shadow-lg);
+    }
+    .detail-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .hero-ticket-number {
+        font-size: 0.825rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #818cf8;
+        text-transform: uppercase;
+        margin-bottom: 0.35rem;
+    }
+    .hero-title {
+        font-size: 1.65rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+    }
+    .hero-meta-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+    }
+    .meta-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.95rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: rgba(255,255,255,0.06);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #e2e8f0;
+    }
+    .meta-pill.priority-critical { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.35); color: #fca5a5; }
+    .meta-pill.priority-high { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.35); color: #fcd34d; }
+    .meta-pill.priority-medium { background: rgba(234, 179, 8, 0.15); border-color: rgba(234, 179, 8, 0.25); color: #fde68a; }
+    .meta-pill.priority-low { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+    .meta-pill.sla-breached { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.35); color: #fca5a5; }
+    .meta-pill.sla-within { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.75rem;
+    }
+    @media (max-width: 992px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .desc-block {
+        background: var(--bg-primary);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: var(--text-main);
+        font-weight: 500;
+        white-space: pre-line;
+    }
+    .resolution-block {
+        background: rgba(16, 185, 129, 0.05);
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: #a7f3d0;
+    }
+    .rca-block {
+        background: rgba(245, 158, 11, 0.05);
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: #fde68a;
+    }
+
+    /* Tabs Styling */
+    .custom-tabs {
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+    .tab-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 0.75rem 0.25rem;
+        cursor: pointer;
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: color 0.2s ease;
+    }
+    .tab-btn:hover {
+        color: var(--text-main);
+    }
+    .tab-btn.active {
+        color: var(--primary);
+    }
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: var(--primary);
+        border-radius: 2px;
+    }
+
+    /* Comments Section */
+    .comment-bubble {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+    .comment-bubble.internal {
+        border-color: rgba(245, 158, 11, 0.25);
+        background: rgba(245, 158, 11, 0.02);
+    }
+    .comment-bubble:hover {
+        border-color: rgba(79, 70, 229, 0.25);
+    }
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+    .comment-author {
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    /* Dropzone Upload */
+    .upload-zone {
+        border: 2px dashed var(--border-color);
+        background: var(--bg-primary);
+        border-radius: 0.75rem;
+        padding: 1.75rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 1.25rem;
+    }
+    .upload-zone:hover {
+        border-color: var(--primary);
+        background: rgba(79, 70, 229, 0.02);
+    }
+    .attachment-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--text-main);
+        font-weight: 600;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    .attachment-badge:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    /* Star rating */
+    .star-rating {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 1.75rem;
+        cursor: pointer;
+        color: #e2e8f0;
+        margin-bottom: 0.75rem;
+    }
+    .star-rating i.active {
+        color: #f59e0b;
+        text-shadow: 0 0 10px rgba(245,158,11,0.3);
+    }
+
+    /* Similar Incidents Card */
+    .similar-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .similar-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+    <!-- Action Bar & Export Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{% url 'incidents-list' %}" class="back-link m-0">
+            <i class="fa-solid fa-arrow-left"></i> Back to Incidents
+        </a>
+        <a href="{% url 'export-single-incident-pdf' incident.id %}" class="btn btn-sm btn-outline-danger fw-bold">
+            <i class="fa-solid fa-file-pdf me-1"></i> Export PDF Audit Report
+        </a>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="detail-hero">
+        <div class="hero-ticket-number">{{ incident.ticket_number }}</div>
+        <h2 class="hero-title">{{ incident.title }}</h2>
+        <div class="hero-meta-pills">
+            <span class="meta-pill priority-{{ incident.priority|lower }}">
+                <i class="fa-solid fa-flag"></i> {{ incident.get_priority_display }}
+            </span>
+            <span class="meta-pill" id="incidentStatusPill">
+                <i class="fa-solid fa-circle-dot"></i> {{ incident.get_status_display }}
+            </span>
+            <span class="meta-pill sla-{% if incident.sla_status == 'BREACHED' %}breached{% else %}within{% endif %}">
+                <i class="fa-solid fa-stopwatch"></i> {{ incident.sla_status }}
+            </span>
+            <span class="meta-pill">
+                <i class="fa-solid fa-folder"></i> {{ incident.category }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Main Detail Grid -->
+    <div class="detail-grid">
+        
+        <!-- Left Column: Details, Comments, Notes & Uploads -->
+        <div>
+            
+            <!-- Description -->
+            <div class="main-card">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-align-left text-primary me-2"></i>Full Description</h5>
+                </div>
+                <div class="main-card-body">
+                    <div class="desc-block">{{ incident.description }}</div>
+                </div>
+            </div>
+
+            <!-- Resolution Section -->
+            {% if incident.resolution_notes %}
+            <div class="main-card" id="resolutionMainCard">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-circle-check text-success me-2"></i>Incident Resolution Details</h5>
+                </div>
+                <div class="main-card-body">
+                    {% if incident.root_cause %}
+                    <div class="info-section">
+                        <div class="info-section-title"><i class="fa-solid fa-magnifying-glass-chart text-warning me-1"></i> Root Cause Analysis (RCA)</div>
+                        <div class="rca-block">{{ incident.root_cause }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="info-section mb-0">
+                        <div class="info-section-title"><i class="fa-solid fa-screwdriver-wrench text-success me-1"></i> Resolution Steps Notes</div>
+                        <div class="resolution-block">{{ incident.resolution_notes }}</div>
+                    </div>
+                    <div class="mt-3 text-muted" style="font-size: 0.8rem;">
+                        <i class="fa-regular fa-clock me-1"></i> Formally resolved at {{ incident.resolved_at|date:"M d, Y h:i A" }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Interactive Tabs: Public Comments, Internal Notes, Attachments -->
+            <div class="main-card">
+                <div class="custom-tabs">
+                    <button class="tab-btn active" id="tabBtnComments" onclick="switchTab('comments')">
+                        <i class="fa-regular fa-comments"></i> Public Comments (<span id="commentsCount">{{ incident.comments.all.count }}</span>)
+                    </button>
+                    {% if request.user.role == 'IT_SUPPORT' or request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
+                    <button class="tab-btn" id="tabBtnNotes" onclick="switchTab('notes')">
+                        <i class="fa-solid fa-lock text-warning"></i> Internal Notes
+                    </button>
+                    {% endif %}
+                    <button class="tab-btn" id="tabBtnAttachments" onclick="switchTab('attachments')">
+                        <i class="fa-solid fa-paperclip"></i> Files & Uploads
+                    </button>
+                </div>
+
+                <div class="main-card-body p-0">
+                    
+                    <!-- TAB 1: Comments Section -->
+                    <div id="tabContentComments">
+                        <div id="commentsList" style="max-height: 380px; overflow-y: auto; padding-right: 0.5rem;">
+                            {% for comm in incident.comments.all %}
+                                {% if not comm.is_internal %}
+                                <div class="comment-bubble">
+                                    <div class="comment-header">
+                                        <span class="comment-author">{{ comm.author.get_full_name|default:comm.author.username }}</span>
+                                        <span>{{ comm.created_at|date:"M d, Y h:i A" }}</span>
+                                    </div>
+                                    <div class="text-white fw-bold">{{ comm.comment_text }}</div>
+                                </div>
+                                {% endif %}
+                            {% empty %}
+                                <div class="text-center text-muted py-4" id="emptyCommentsPlaceholder">No public comments logged yet.</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Post Comment Form -->
+                        {% if incident.status != 'CLOSED' %}
+                        <form id="commentForm" class="mt-3" onsubmit="submitComment(event, false)">
+                            <div class="input-group">
+                                <input type="text" id="commentInput" class="form-control form-control-sm" placeholder="Write a public comment..." required style="background: var(--bg-primary); border-color: var(--border-color); color: var(--text-main);">
+                                <button type="submit" class="btn btn-sm btn-primary px-3"><i class="fa-solid fa-paper-plane"></i></button>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <!-- TAB 2: Internal Notes (Staff-only) -->
+                    <div id="tabContentNotes" style="display: none;">
+                        <div id="notesList" style="max-height: 380px; overflow-y: auto; padding-right: 0.5rem;">
+                            {% for comm in incident.comments.all %}
+                                {% if comm.is_internal %}
+                                <div class="comment-bubble internal">
+                                    <div class="comment-header">
+                                        <span class="comment-author text-warning"><i class="fa-solid fa-lock me-1"></i>{{ comm.author.get_full_name|default:comm.author.username }}</span>
+                                        <span>{{ comm.created_at|date:"M d, Y h:i A" }}</span>
+                                    </div>
+                                    <div class="text-white fw-bold">{{ comm.comment_text }}</div>
+                                </div>
+                                {% endif %}
+                            {% empty %}
+                                <div class="text-center text-muted py-4" id="emptyNotesPlaceholder">No internal staff notes logged yet.</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Post Note Form -->
+                        {% if incident.status != 'CLOSED' %}
+                        <form id="noteForm" class="mt-3" onsubmit="submitComment(event, true)">
+                            <div class="input-group">
+                                <input type="text" id="noteInput" class="form-control form-control-sm" placeholder="Write a secure internal IT staff note..." required style="background: var(--bg-primary); border-color: rgba(245,158,11,0.3); color: var(--text-main);">
+                                <button type="submit" class="btn btn-sm btn-warning text-white px-3"><i class="fa-solid fa-lock"></i> Save Note</button>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <!-- TAB 3: Attachments Section -->
+                    <div id="tabContentAttachments" style="display: none;">
+                        
+                        <!-- Drag/Drop Dropzone -->
+                        {% if incident.status != 'CLOSED' %}
+                        <div class="upload-zone" onclick="document.getElementById('fileInput').click()" id="uploadZone">
+                            <i class="fa-solid fa-cloud-arrow-up text-primary fs-2 mb-2"></i>
+                            <h6 class="fw-bold text-white mb-1">Drag & Drop files here, or Click to browse</h6>
+                            <p class="m-0 text-muted" style="font-size: 0.725rem;">Supports PDF, Images, Word, Text (Max 10MB)</p>
+                            <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelected(event)">
+                        </div>
+                        <div class="progress mb-3" style="height: 6px; display: none;" id="uploadProgressBar">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 0%;"></div>
+                        </div>
+                        {% endif %}
+
+                        <div class="xai-title mb-2"><i class="fa-solid fa-folder-open"></i> Uploaded Documents</div>
+                        <div id="attachmentsList">
+                            {% for attach in incident.attachments.all %}
+                                <a href="{{ attach.file.url }}" target="_blank" class="attachment-badge text-decoration-none">
+                                    <i class="fa-solid fa-file-lines text-primary"></i>
+                                    <span>{{ attach.filename }}</span>
+                                    <span class="text-muted" style="font-size: 0.7rem;">({{ attach.file_size|filesizeformat }})</span>
+                                </a>
+                            {% empty %}
+                                <div class="text-center text-muted py-4" id="emptyAttachmentsPlaceholder">No files uploaded for this incident.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- User Feedback Star Rating Box (Saves feedback & sets status to CLOSED) -->
+            {% if incident.status == 'RESOLVED' or incident.status == 'CLOSED' %}
+                <div class="main-card" id="feedbackRatingCard">
+                    <div class="main-card-header">
+                        <h5 class="card-title-text"><i class="fa-solid fa-star text-warning me-2"></i>User Satisfaction & Feedback</h5>
+                    </div>
+                    <div class="main-card-body">
+                        {% if incident.feedback %}
+                            <!-- Already Submitted -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="star-rating m-0">
+                                    {% for i in "12345" %}
+                                        <i class="fa-solid fa-star {% if forloop.counter <= incident.feedback.rating %}active{% endif %}"></i>
+                                    {% endfor %}
+                                </div>
+                                <div class="text-muted" style="font-size: 0.85rem; font-weight: 700;">Submitted: Rating of {{ incident.feedback.rating }}/5</div>
+                            </div>
+                            {% if incident.feedback.comments %}
+                                <div class="mt-2 text-white fw-bold bg-light p-3 rounded" style="font-style: italic;">
+                                    "{{ incident.feedback.comments }}"
+                                </div>
+                            {% endif %}
+                        {% elif incident.caller == request.user %}
+                            <!-- Call for feedback -->
+                            <div class="star-rating" id="starsSelector">
+                                <i class="fa-solid fa-star" data-rating="1" onclick="setRatingValue(1)"></i>
+                                <i class="fa-solid fa-star" data-rating="2" onclick="setRatingValue(2)"></i>
+                                <i class="fa-solid fa-star" data-rating="3" onclick="setRatingValue(3)"></i>
+                                <i class="fa-solid fa-star" data-rating="4" onclick="setRatingValue(4)"></i>
+                                <i class="fa-solid fa-star active" data-rating="5" onclick="setRatingValue(5)"></i>
+                            </div>
+                            <input type="hidden" id="selectedRating" value="5">
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted fw-bold" style="font-size: 0.775rem;">Your comments regarding the resolution</label>
+                                <textarea id="feedbackComment" class="form-control form-control-sm" rows="2" placeholder="Leave a feedback message for support..." style="background: var(--bg-primary); border-color: var(--border-color); color: var(--text-main);"></textarea>
+                            </div>
+                            
+                            <button class="btn btn-sm btn-success text-white px-3" onclick="submitFeedback()">
+                                <i class="fa-solid fa-paper-plane me-1"></i> Submit Satisfaction Rating
+                            </button>
+                        {% else %}
+                            <div class="text-center text-muted py-3">Awaiting caller satisfaction rating and close out.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Right Column: Sidebar (Metadata, Timeline, AI Advisors) -->
+        <div>
+            
+            <!-- Quick Actions Panel -->
+            <div class="main-card">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-bolt text-warning me-2"></i>ITSM Quick Actions</h5>
+                </div>
+                <div class="main-card-body">
+                    <div class="action-buttons">
+                        {% if not incident.assigned_to and request.user.role == 'IT_SUPPORT' %}
+                        <button class="action-btn primary" onclick="claimIncident()">
+                            <i class="fa-solid fa-hand"></i> Claim This Ticket
+                        </button>
+                        {% endif %}
+
+                        {% if incident.status != 'RESOLVED' and incident.status != 'CLOSED' and request.user.role == 'IT_SUPPORT' and incident.assigned_to == request.user %}
+                        <button class="action-btn success" onclick="openResolveModal()">
+                            <i class="fa-solid fa-circle-check"></i> Resolve Incident
+                        </button>
+                        {% endif %}
+
+                        <!-- Close button visible to support/admin or Caller when resolved -->
+                        {% if incident.status == 'RESOLVED' %}
+                        <button class="action-btn primary" onclick="closeIncidentDirectly()">
+                            <i class="fa-solid fa-circle-xmark"></i> Formally Close Ticket
+                        </button>
+                        {% endif %}
+
+                        <!-- Reopen button visible when resolved or closed -->
+                        {% if incident.status == 'RESOLVED' or incident.status == 'CLOSED' %}
+                        <button class="action-btn outline" onclick="reopenIncidentDirectly()">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> Reopen Ticket
+                        </button>
+                        {% endif %}
+
+                        <a href="{% url 'incidents-list' %}" class="action-btn outline mt-2 text-decoration-none">
+                            <i class="fa-solid fa-list"></i> Return to Queue
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Intelligence Hub Advisor (Staff-only) -->
+            {% if request.user.role == 'IT_SUPPORT' or request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
+            <div class="main-card">
+                <div class="main-card-header">
+                    <h5 class="card-title-text">
+                        <i class="fa-solid fa-wand-magic-sparkles text-primary fa-fade"></i> AI Advisor Co-pilot
+                    </h5>
+                </div>
+                <div class="main-card-body">
+                    <button class="btn btn-xs btn-outline-primary w-100 fw-bold mb-3" onclick="runAIAdvisor()" id="aiAdvisorBtn">
+                        <i class="fa-solid fa-brain me-1"></i> ✨ Run AI Expert Diagnostics
+                    </button>
+                    
+                    <div id="aiAdvisorBox" style="display: none;" class="bg-light p-3 rounded mb-3">
+                        <div class="xai-title text-primary"><i class="fa-solid fa-magnifying-glass-chart"></i> AI Root Cause:</div>
+                        <div class="text-white fw-bold mb-3" style="font-size: 0.775rem; font-style: italic;" id="aiRCA">Running...</div>
+                        
+                        <div class="xai-title text-success"><i class="fa-solid fa-screwdriver-wrench"></i> AI Suggestion:</div>
+                        <div class="text-white fw-bold mb-3" style="font-size: 0.775rem;" id="aiSuggestedResolution">Running...</div>
+                        
+                        <!-- One click apply -->
+                        {% if incident.status != 'RESOLVED' and incident.status != 'CLOSED' %}
+                        <button class="btn btn-xs btn-success text-white w-100 fw-bold" onclick="applyAISuggestions()">
+                            <i class="fa-solid fa-circle-check me-1"></i> Apply AI Suggestions to Modal
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Similar Incidents Matches -->
+                    <div class="xai-title mb-2"><i class="fa-solid fa-arrows-split-up-and-left"></i> Similar Incidents (Category Match)</div>
+                    <div id="similarIncidentsContainer">
+                        <div class="text-center text-muted py-2" style="font-size: 0.725rem;" id="similarLoadingText">Loading matching incidents...</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Dynamic Activity Timeline Card -->
+            <div class="main-card">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-timeline text-primary me-2"></i>Audit Timeline</h5>
+                </div>
+                <div class="main-card-body">
+                    <div class="timeline" id="dynamicTimeline">
+                        <!-- Loaded via activities list -->
+                        {% for act in incident.activities.all %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot {% if act.activity_type == 'RESOLVED' or act.activity_type == 'CLOSED' %}green{% elif act.activity_type == 'REOPENED' or act.activity_type == 'CLAIMED' %}amber{% elif act.activity_type == 'RATING_SUBMITTED' %}gray{% endif %}"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">{{ act.description }}</div>
+                                <div class="timeline-time">{{ act.created_at|date:"M d, Y h:i A" }}</div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Incident Created</div>
+                                <div class="timeline-time">{{ incident.created_at|date:"M d, Y h:i A" }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Resolve Modal -->
+<div class="modal fade" id="resolveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="font-size: 1rem;">
+                    <i class="fa-solid fa-circle-check text-success me-1"></i> Resolve Incident {{ incident.ticket_number }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="resolveForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.8rem;">Root Cause Analysis (RCA)</label>
+                        <textarea class="form-control form-control-sm" id="resolve_root_cause" rows="2" placeholder="Describe the root cause..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.8rem;">Resolution Notes</label>
+                        <textarea class="form-control form-control-sm" id="resolve_notes" rows="3" placeholder="Explain the resolution steps..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-sm btn-success text-white px-3" onclick="submitResolution()">Resolve</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tab switching controller
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('tabBtnComments').classList.toggle('active', tab === 'comments');
+        if (document.getElementById('tabBtnNotes')) {
+            document.getElementById('tabBtnNotes').classList.toggle('active', tab === 'notes');
+        }
+        document.getElementById('tabBtnAttachments').classList.toggle('active', tab === 'attachments');
+
+        document.getElementById('tabContentComments').style.display = tab === 'comments' ? 'block' : 'none';
+        if (document.getElementById('tabContentNotes')) {
+            document.getElementById('tabContentNotes').style.display = tab === 'notes' ? 'block' : 'none';
+        }
+        document.getElementById('tabContentAttachments').style.display = tab === 'attachments' ? 'block' : 'none';
+    }
+
+    // claim ticket function
+    async function claimIncident() {
+        try {
+            const response = await fetch(`/api/service_desk/incidents/{{ incident.id }}/assign-to-me/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            if (response.ok) {
+                location.reload();
+            } else {
+                const err = await response.json();
+                alert(err.error || 'Failed to claim incident.');
+            }
+        } catch (e) {
+            alert('An error occurred.');
+        }
+    }
+
+    // Reopen Ticket
+    async function reopenIncidentDirectly() {
+        if (!confirm('Are you sure you want to reopen this ticket?')) return;
+        try {
+            const response = await fetch(`/incidents/{{ incident.id }}/reopen/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to reopen ticket.');
+            }
+        } catch (e) {
+            alert('Network error.');
+        }
+    }
+
+    // Close Ticket
+    async function closeIncidentDirectly() {
+        if (!confirm('Are you sure you want to close this ticket?')) return;
+        try {
+            const response = await fetch(`/incidents/{{ incident.id }}/close/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to close ticket.');
+            }
+        } catch (e) {
+            alert('Network error.');
+        }
+    }
+
+    // Comments Form AJAX
+    async function submitComment(event, isInternal) {
+        event.preventDefault();
+        const textInput = isInternal ? document.getElementById('noteInput') : document.getElementById('commentInput');
+        const text = textInput.value.trim();
+        if (!text) return;
+
+        const formData = new FormData();
+        formData.append('comment_text', text);
+        formData.append('is_internal', isInternal ? 'true' : 'false');
+
+        try {
+            const response = await fetch(`/incidents/{{ incident.id }}/comment/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const bubble = document.createElement('div');
+                bubble.className = `comment-bubble ${isInternal ? 'internal' : ''}`;
+                bubble.innerHTML = `
+                    <div class="comment-header">
+                        <span class="comment-author ${isInternal ? 'text-warning' : ''}">
+                            ${isInternal ? '<i class="fa-solid fa-lock me-1"></i>' : ''}${data.comment.author}
+                        </span>
+                        <span>${data.comment.created_at}</span>
+                    </div>
+                    <div class="text-white fw-bold">${data.comment.comment_text}</div>
+                `;
+
+                const list = isInternal ? document.getElementById('notesList') : document.getElementById('commentsList');
+                const placeholder = isInternal ? document.getElementById('emptyNotesPlaceholder') : document.getElementById('emptyCommentsPlaceholder');
+                
+                if (placeholder) placeholder.remove();
+                list.insertBefore(bubble, list.firstChild);
+                textInput.value = '';
+
+                if (!isInternal) {
+                    const countEl = document.getElementById('commentsCount');
+                    countEl.innerText = parseInt(countEl.innerText) + 1;
+                }
+
+                // Add item to Timeline as well
+                const timeline = document.getElementById('dynamicTimeline');
+                const tItem = document.createElement('div');
+                tItem.className = 'timeline-item';
+                tItem.innerHTML = `
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${isInternal ? 'IT staff added internal note.' : 'Public comment added.'}</div>
+                        <div class="timeline-time">${data.comment.created_at}</div>
+                    </div>
+                `;
+                timeline.insertBefore(tItem, timeline.firstChild);
+            }
+        } catch (e) {
+            alert('Failed to post comment.');
+        }
+    }
+
+    // Attachments File Upload AJAX
+    async function handleFileSelected(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('attachment_file', file);
+
+        const progressBar = document.getElementById('uploadProgressBar');
+        progressBar.style.display = 'block';
+
+        try {
+            const response = await fetch(`/incidents/{{ incident.id }}/attachment/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            });
+
+            progressBar.style.display = 'none';
+
+            if (response.ok) {
+                const data = await response.json();
+                const badge = document.createElement('a');
+                badge.href = data.attachment.url;
+                badge.target = '_blank';
+                badge.className = 'attachment-badge text-decoration-none';
+                badge.innerHTML = `
+                    <i class="fa-solid fa-file-lines text-primary"></i>
+                    <span>${data.attachment.filename}</span>
+                    <span class="text-muted" style="font-size: 0.7rem;">(${data.attachment.file_size} KB)</span>
+                `;
+
+                const list = document.getElementById('attachmentsList');
+                const placeholder = document.getElementById('emptyAttachmentsPlaceholder');
+                if (placeholder) placeholder.remove();
+                list.appendChild(badge);
+
+                // Add to timeline
+                const timeline = document.getElementById('dynamicTimeline');
+                const tItem = document.createElement('div');
+                tItem.className = 'timeline-item';
+                tItem.innerHTML = `
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">File uploaded: ${data.attachment.filename}</div>
+                        <div class="timeline-time">${data.attachment.created_at}</div>
+                    </div>
+                `;
+                timeline.insertBefore(tItem, timeline.firstChild);
+            } else {
+                alert('Upload failed.');
+            }
+        } catch (e) {
+            progressBar.style.display = 'none';
+            alert('Network upload error.');
+        }
+    }
+
+    // Star feedback rating selection
+    function setRatingValue(rating) {
+        document.getElementById('selectedRating').value = rating;
+        const stars = document.querySelectorAll('#starsSelector i');
+        stars.forEach(star => {
+            const val = parseInt(star.getAttribute('data-rating'));
+            star.classList.toggle('active', val <= rating);
+        });
+    }
+
+    // Submit Feedback satisfaction survey
+    async function submitFeedback() {
+        const rating = document.getElementById('selectedRating').value;
+        const comments = document.getElementById('feedbackComment').value.trim();
+
+        try {
+            const response = await fetch(`/incidents/{{ incident.id }}/feedback/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ rating, comments })
+            });
+
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Feedback submission failed.');
+            }
+        } catch (e) {
+            alert('A network error occurred.');
+        }
+    }
+
+    // AI advisor execution
+    async function runAIAdvisor() {
+        const btn = document.getElementById('aiAdvisorBtn');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consulting AI Operations Agent...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`/incidents/{{ incident.id }}/ai-suggest/`);
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('aiRCA').innerText = data.root_cause;
+                document.getElementById('aiSuggestedResolution').innerText = data.suggested_resolution;
+                document.getElementById('aiAdvisorBox').style.display = 'block';
+                btn.innerHTML = '<i class="fa-solid fa-brain me-1"></i> Reconsult AI Advisor';
+                btn.disabled = false;
+            }
+        } catch (e) {
+            btn.innerHTML = 'AI Advisor Failed';
+            btn.disabled = false;
+        }
+    }
+
+    // One click apply resolution notes
+    function applyAISuggestions() {
+        const rca = document.getElementById('aiRCA').innerText;
+        const notes = document.getElementById('aiSuggestedResolution').innerText;
+        
+        // Open modal and pre-fill
+        openResolveModal();
+        document.getElementById('resolve_root_cause').value = rca;
+        document.getElementById('resolve_notes').value = notes;
+    }
+
+    // Query Similar Incidents (category match resolved queue)
+    async function querySimilarIncidents() {
+        const container = document.getElementById('similarIncidentsContainer');
+        try {
+            const response = await fetch(`/incidents/{{ incident.id }}/similar/`);
+            if (response.ok) {
+                const data = await response.json();
+                container.innerHTML = '';
+                
+                if (data.similar.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted py-2" style="font-size: 0.725rem;">No historical matches in this category.</div>';
+                    return;
+                }
+
+                data.similar.forEach(inc => {
+                    const item = document.createElement('div');
+                    item.className = 'similar-item';
+                    item.innerHTML = `
+                        <div class="d-flex justify-content-between" style="font-size: 0.775rem;">
+                            <a href="/incidents/${inc.id}/" class="fw-bold text-primary">${inc.ticket_number}</a>
+                            <span class="badge-priority ${inc.priority.toLowerCase()}">${inc.priority}</span>
+                        </div>
+                        <div class="text-white fw-semibold mb-1" style="font-size: 0.8rem;">${inc.title}</div>
+                        <div class="bg-light p-2 rounded" style="font-size: 0.725rem; font-style: italic;">
+                            <b>Resolution:</b> ${inc.resolution_notes.substring(0, 100)}${inc.resolution_notes.length > 100 ? '...' : ''}
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+        } catch(e) {
+            container.innerHTML = '<div class="text-center text-muted py-2">Failed to load matching database incidents.</div>';
+        }
+    }
+
+    // Resolution Modal
+    let bsResolveModal;
+    function openResolveModal() {
+        bsResolveModal = new bootstrap.Modal(document.getElementById('resolveModal'));
+        bsResolveModal.show();
+    }
+
+    async function submitResolution() {
+        const notes = document.getElementById('resolve_notes').value.trim();
+        const rca = document.getElementById('resolve_root_cause').value.trim();
+
+        if (!notes) {
+            alert('Resolution notes are required.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/service_desk/incidents/{{ incident.id }}/resolve/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ resolution_notes: notes, root_cause: rca })
+            });
+            if (response.ok) {
+                bsResolveModal.hide();
+                location.reload();
+            } else {
+                const err = await response.json();
+                alert(err.error || 'Failed to resolve incident.');
+            }
+        } catch (e) {
+            alert('An error occurred.');
+        }
+    }
+
+    // Trigger similar incidents query on load
+    document.addEventListener("DOMContentLoaded", () => {
+        if (document.getElementById('similarIncidentsContainer')) {
+            querySimilarIncidents();
+        }
+    });
+</script>
+{% endblock %}

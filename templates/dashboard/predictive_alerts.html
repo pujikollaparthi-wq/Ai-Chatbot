@@ -1,0 +1,599 @@
+{% extends 'base.html' %}
+
+{% block title %}AIOPS Platform - Predictive Alerts Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .aiops-hero {
+        background: linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #4c1d95 100%);
+        border-radius: 1rem;
+        padding: 2rem 2.5rem;
+        color: #ffffff;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: var(--shadow-lg);
+    }
+    .aiops-hero::before {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -10%;
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .aiops-title {
+        font-size: 1.65rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .aiops-desc {
+        font-size: 0.925rem;
+        color: #cbd5e1;
+        max-width: 680px;
+        line-height: 1.6;
+    }
+
+    .telemetry-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 2rem;
+    }
+    @media (max-width: 992px) {
+        .telemetry-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Preset Scenarios */
+    .scenario-pill {
+        background: rgba(255,255,255,0.04);
+        border: 1.5px solid var(--border-color);
+        color: var(--text-main);
+        padding: 0.65rem 1.15rem;
+        border-radius: 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .scenario-pill:hover {
+        background: rgba(255,255,255,0.08);
+        border-color: var(--primary);
+        transform: translateY(-2px);
+    }
+    .scenario-pill.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #ffffff;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+    }
+
+    /* Gauge / Telemetry dials */
+    .metric-gauges-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        margin: 1.5rem 0;
+    }
+    @media (max-width: 576px) {
+        .metric-gauges-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    .gauge-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 0.85rem;
+        padding: 1.25rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+    .gauge-card:hover {
+        border-color: rgba(79, 70, 229, 0.3);
+        transform: translateY(-2px);
+    }
+    .circle-gauge {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem;
+        position: relative;
+        transition: background 0.5s ease;
+    }
+    .circle-gauge-inner {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: var(--card-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1rem;
+        color: var(--text-main);
+    }
+    .gauge-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Slider metrics control */
+    .slider-group {
+        margin-bottom: 1.25rem;
+    }
+    .slider-label-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.35rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+    .slider-value {
+        color: var(--primary);
+        font-weight: bold;
+    }
+    .custom-range {
+        width: 100%;
+        accent-color: var(--primary);
+    }
+
+    /* Outage predictor panel */
+    .outage-panel {
+        background: var(--bg-primary);
+        border: 1.5px dashed var(--border-color);
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .outage-panel.danger-glow {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.04);
+        box-shadow: 0 0 25px rgba(239, 68, 68, 0.15);
+    }
+    .outage-panel.warning-glow {
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.04);
+        box-shadow: 0 0 25px rgba(245, 158, 11, 0.15);
+    }
+    .outage-panel.success-glow {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.04);
+    }
+
+    .outage-gauge-large {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        position: relative;
+        transition: background 0.6s ease;
+    }
+    .outage-gauge-large-inner {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: var(--card-bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .outage-pct {
+        font-size: 2.2rem;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.04em;
+    }
+    .outage-lbl {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-top: 0.25rem;
+    }
+
+    .xai-title {
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .xai-reason {
+        font-size: 0.9rem;
+        color: var(--text-main);
+        margin-bottom: 1.5rem;
+        max-width: 420px;
+        line-height: 1.5;
+        font-weight: 600;
+    }
+
+    .proactive-btn {
+        background: #ef4444;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border: none;
+        padding: 0.85rem 1.5rem;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+    .proactive-btn:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.55);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+    <!-- Hero Title -->
+    <div class="aiops-hero">
+        <h2 class="aiops-title">
+            <i class="fa-solid fa-wand-magic-sparkles text-warning fa-fade"></i>
+            AIOps Predictive Alerts Center
+        </h2>
+        <p class="aiops-desc">
+            This module evaluates real-time telemetry from enterprise servers. The machine learning model forecasts imminent hardware exhaustion risks, analyzes failure probability, explains root causes, and lets IT operators automatically create proactive tickets to avoid SLA breaches before a crash occurs.
+        </p>
+    </div>
+
+    <!-- Main Simulator Grid -->
+    <div class="telemetry-grid">
+        
+        <!-- Left Pane: Telemetry Metrics Simulator -->
+        <div class="main-card">
+            <div class="main-card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title-text"><i class="fa-solid fa-sliders text-primary me-2"></i>Infrastructure Metrics Telemetry</h5>
+                <select id="serverSelect" class="form-select form-select-sm w-auto fw-bold" style="background-color: var(--card-bg); color: var(--text-main); border-color: var(--border-color);">
+                    <option value="Prod-DB-Server-01">Prod-DB-Server-01 (High Performance Database)</option>
+                    <option value="Core-Web-Server-03">Core-Web-Server-03 (Customer Portal Host)</option>
+                    <option value="AD-Domain-Controller">AD-Domain-Controller (Identity Server)</option>
+                    <option value="Edge-Router-South">Edge-Router-South (Gateway Interface)</option>
+                </select>
+            </div>
+            
+            <div class="main-card-body">
+                
+                <!-- Quick Preset Scenarios -->
+                <div class="xai-title"><i class="fa-solid fa-bolt"></i> Simulated Live Scenarios</div>
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <button class="scenario-pill active" onclick="loadScenario('normal')">
+                        <i class="fa-solid fa-circle-check text-success"></i> Normal State
+                    </button>
+                    <button class="scenario-pill" onclick="loadScenario('cpu')">
+                        <i class="fa-solid fa-fire text-danger"></i> High CPU saturation (95%)
+                    </button>
+                    <button class="scenario-pill" onclick="loadScenario('memory')">
+                        <i class="fa-solid fa-droplet text-warning"></i> Memory Leak Outage (97%)
+                    </button>
+                    <button class="scenario-pill" onclick="loadScenario('network')">
+                        <i class="fa-solid fa-cloud-bolt text-danger"></i> Traffic Storm (950 Mbps)
+                    </button>
+                </div>
+
+                <!-- Visual Gauges Row -->
+                <div class="metric-gauges-container">
+                    <div class="gauge-card">
+                        <div class="circle-gauge" id="cpuGauge">
+                            <div class="circle-gauge-inner" id="cpuGaugeVal">50%</div>
+                        </div>
+                        <div class="gauge-label">CPU Load</div>
+                    </div>
+                    
+                    <div class="gauge-card">
+                        <div class="circle-gauge" id="memGauge">
+                            <div class="circle-gauge-inner" id="memGaugeVal">50%</div>
+                        </div>
+                        <div class="gauge-label">Memory</div>
+                    </div>
+                    
+                    <div class="gauge-card">
+                        <div class="circle-gauge" id="diskGauge">
+                            <div class="circle-gauge-inner" id="diskGaugeVal">50%</div>
+                        </div>
+                        <div class="gauge-label">Disk Storage</div>
+                    </div>
+                    
+                    <div class="gauge-card">
+                        <div class="circle-gauge" id="netGauge">
+                            <div class="circle-gauge-inner" id="netGaugeVal">100M</div>
+                        </div>
+                        <div class="gauge-label">Network</div>
+                    </div>
+                </div>
+
+                <!-- Live Fine Tuning Sliders -->
+                <div class="xai-title mt-4"><i class="fa-solid fa-screwdriver-wrench"></i> Manual Fine-Tuning</div>
+                
+                <div class="slider-group">
+                    <div class="slider-label-row">
+                        <span>CPU Saturation Rate</span>
+                        <span class="slider-value" id="cpuVal">50%</span>
+                    </div>
+                    <input type="range" min="1" max="100" value="50" class="custom-range" id="cpuRange" oninput="onSliderChange()">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label-row">
+                        <span>Memory Resource Exhaustion</span>
+                        <span class="slider-value" id="memVal">50%</span>
+                    </div>
+                    <input type="range" min="1" max="100" value="50" class="custom-range" id="memRange" oninput="onSliderChange()">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label-row">
+                        <span>System Mount Disk Usage</span>
+                        <span class="slider-value" id="diskVal">50%</span>
+                    </div>
+                    <input type="range" min="1" max="100" value="50" class="custom-range" id="diskRange" oninput="onSliderChange()">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label-row">
+                        <span>Active Network Load (Mbps)</span>
+                        <span class="slider-value" id="netVal">100M</span>
+                    </div>
+                    <input type="range" min="10" max="1000" value="100" class="custom-range" id="netRange" oninput="onSliderChange()">
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Right Pane: AI Operations Predictor Dashboard -->
+        <div class="outage-panel success-glow" id="predictorPanel">
+            
+            <!-- Giant Indicator Circle -->
+            <div class="outage-gauge-large" id="largeGauge">
+                <div class="outage-gauge-large-inner">
+                    <span class="outage-pct" id="predictionPct">5%</span>
+                    <span class="outage-lbl">Outage Risk</span>
+                </div>
+            </div>
+            
+            <!-- Explainable AI Explanation -->
+            <div class="xai-title"><i class="fa-solid fa-brain"></i> AI Explanatory Diagnostics</div>
+            <div class="xai-reason text-center" id="diagnosticReason">
+                All metrics are performing within normal operational thresholds.
+            </div>
+
+            <!-- Proactive Action Button -->
+            <div id="proactiveActionContainer" style="display: none;">
+                <div class="xai-title mb-2 justify-content-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> Critical Threat Detected</div>
+                <button class="proactive-btn" onclick="proactivelyLogIncident()">
+                    <i class="fa-solid fa-bolt-lightning"></i>
+                    ⚡ Log Proactive Incident Ticket
+                </button>
+            </div>
+            
+            <!-- Safe State text -->
+            <div id="proactiveSafeText" class="text-success fw-bold" style="font-size: 0.85rem;">
+                <i class="fa-solid fa-shield-halved me-1"></i> Infrastructure Status: Healthy & Stable
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Scenarios preset data
+    const presets = {
+        normal: { cpu: 12, memory: 45, disk: 30, network: 80 },
+        cpu: { cpu: 95, memory: 48, disk: 40, network: 150 },
+        memory: { cpu: 74, memory: 97, disk: 32, network: 85 },
+        network: { cpu: 88, memory: 60, disk: 35, network: 950 }
+    };
+
+    let evaluationDebouncer;
+
+    // Load a preset scenario
+    function loadScenario(type) {
+        // Toggle active button
+        document.querySelectorAll('.scenario-pill').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        const data = presets[type];
+        document.getElementById('cpuRange').value = data.cpu;
+        document.getElementById('memRange').value = data.memory;
+        document.getElementById('diskRange').value = data.disk;
+        document.getElementById('netRange').value = data.network;
+
+        updateUIValues();
+        triggerOutageEvaluation();
+    }
+
+    function onSliderChange() {
+        // Remove scenario active highlight since user adjusted manual metrics
+        document.querySelectorAll('.scenario-pill').forEach(btn => btn.classList.remove('active'));
+        updateUIValues();
+
+        clearTimeout(evaluationDebouncer);
+        evaluationDebouncer = setTimeout(triggerOutageEvaluation, 350);
+    }
+
+    function updateUIValues() {
+        const cpu = document.getElementById('cpuRange').value;
+        const memory = document.getElementById('memRange').value;
+        const disk = document.getElementById('diskRange').value;
+        const network = document.getElementById('netRange').value;
+
+        // Text values
+        document.getElementById('cpuVal').innerText = `${cpu}%`;
+        document.getElementById('memVal').innerText = `${memory}%`;
+        document.getElementById('diskVal').innerText = `${disk}%`;
+        document.getElementById('netVal').innerText = `${network} Mbps`;
+
+        // Small Gauges update
+        document.getElementById('cpuGaugeVal').innerText = `${cpu}%`;
+        document.getElementById('memGaugeVal').innerText = `${memory}%`;
+        document.getElementById('diskGaugeVal').innerText = `${disk}%`;
+        document.getElementById('netGaugeVal').innerText = `${network}M`;
+
+        // Colors based on threshold
+        updateGaugeStyle('cpuGauge', cpu);
+        updateGaugeStyle('memGauge', memory);
+        updateGaugeStyle('diskGauge', disk);
+        
+        let netColor = '#e2e8f0';
+        const netPct = (network / 1000) * 100;
+        if (netPct > 85) netColor = 'conic-gradient(#ef4444 ' + netPct + '%, #e2e8f0 0deg)';
+        else if (netPct > 60) netColor = 'conic-gradient(#f59e0b ' + netPct + '%, #e2e8f0 0deg)';
+        else netColor = 'conic-gradient(#10b981 ' + netPct + '%, #e2e8f0 0deg)';
+        document.getElementById('netGauge').style.background = netColor;
+    }
+
+    function updateGaugeStyle(gaugeId, val) {
+        let bg = '#e2e8f0';
+        if (val > 85) bg = `conic-gradient(#ef4444 ${val}%, #e2e8f0 0deg)`;
+        else if (val > 60) bg = `conic-gradient(#f59e0b ${val}%, #e2e8f0 0deg)`;
+        else bg = `conic-gradient(#10b981 ${val}%, #e2e8f0 0deg)`;
+        document.getElementById(gaugeId).style.background = bg;
+    }
+
+    // Call API view to evaluate server parameters using AI outage forecasting
+    async function triggerOutageEvaluation() {
+        const cpu = document.getElementById('cpuRange').value;
+        const memory = document.getElementById('memRange').value;
+        const disk = document.getElementById('diskRange').value;
+        const network = document.getElementById('netRange').value;
+
+        // Large Gauge Loading state
+        document.getElementById('predictionPct').innerHTML = '<i class="fa-solid fa-spinner fa-spin fs-4"></i>';
+
+        try {
+            const response = await fetch('/api/aiops/evaluate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ cpu, memory, disk, network })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const prob = data.probability;
+
+                // Update Outage Percentage
+                document.getElementById('predictionPct').innerText = `${prob}%`;
+
+                // Update Explanatory diagnostics text
+                document.getElementById('diagnosticReason').innerText = data.reason;
+
+                // Dynamic severity colors and buttons panel
+                const panel = document.getElementById('predictorPanel');
+                const largeGauge = document.getElementById('largeGauge');
+                panel.className = 'outage-panel'; // clear glow classes
+
+                let color = '#10b981';
+                if (prob >= 75) {
+                    color = '#ef4444';
+                    panel.classList.add('danger-glow');
+                    document.getElementById('proactiveActionContainer').style.display = 'block';
+                    document.getElementById('proactiveSafeText').style.display = 'none';
+                } else if (prob >= 40) {
+                    color = '#f59e0b';
+                    panel.classList.add('warning-glow');
+                    document.getElementById('proactiveActionContainer').style.display = 'block';
+                    document.getElementById('proactiveSafeText').style.display = 'none';
+                } else {
+                    panel.classList.add('success-glow');
+                    document.getElementById('proactiveActionContainer').style.display = 'none';
+                    document.getElementById('proactiveSafeText').style.display = 'block';
+                }
+
+                largeGauge.style.background = `conic-gradient(${color} ${prob}%, #e2e8f0 0deg)`;
+                document.getElementById('predictionPct').style.color = color;
+            }
+        } catch (e) {
+            document.getElementById('predictionPct').innerText = 'Err';
+        }
+    }
+
+    async function proactivelyLogIncident() {
+        const cpu = document.getElementById('cpuRange').value;
+        const memory = document.getElementById('memRange').value;
+        const prob = parseInt(document.getElementById('predictionPct').innerText);
+        const server = document.getElementById('serverSelect').value;
+
+        // Button loading
+        const btn = document.querySelector('.proactive-btn');
+        const oldHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Triggering Preventive Protocol...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/aiops/create-proactive-ticket/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ cpu, memory, probability: prob, server_name: server })
+            });
+
+            if (response.ok) {
+                const res = await response.json();
+                // Redirect immediately to detail view
+                window.location.href = res.redirect_url;
+            } else {
+                btn.innerHTML = oldHtml;
+                btn.disabled = false;
+                alert('Preventive automation failure.');
+            }
+        } catch (e) {
+            btn.innerHTML = oldHtml;
+            btn.disabled = false;
+            alert('A network error occurred.');
+        }
+    }
+
+    // Initial page load
+    document.addEventListener("DOMContentLoaded", () => {
+        updateUIValues();
+        triggerOutageEvaluation();
+    });
+</script>
+{% endblock %}

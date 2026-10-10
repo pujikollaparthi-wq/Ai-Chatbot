@@ -1,0 +1,26 @@
+body {
+    background: url('/static/bg.jpg');
+    background-size: cover;
+    color: white;
+    font-family: Arial;
+}
+
+.center-box {
+    margin-top: 150px;
+    background: rgba(0,0,0,0.5);
+    padding: 40px;
+    border-radius: 10px;
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+a, button {
+    background: #007bff;
+    padding: 10px 20px;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    margin: 10px;
+    border: none;
+}

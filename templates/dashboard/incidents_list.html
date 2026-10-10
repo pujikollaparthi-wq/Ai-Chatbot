@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block title %}AIOPS Platform - Incidents Queue{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold m-0" style="font-size: 1.35rem;">Incident Management</h4>
+        <div class="d-flex gap-2">
+            <a href="{% url 'export-incidents-pdf' %}" class="btn btn-sm btn-outline-danger fw-semibold px-2 py-2">
+                <i class="fa-solid fa-file-pdf me-1"></i> Export PDF
+            </a>
+            <a href="{% url 'export-incidents-excel' %}" class="btn btn-sm btn-outline-success fw-semibold px-2 py-2">
+                <i class="fa-solid fa-file-excel me-1"></i> Export Excel
+            </a>
+            <a href="{% url 'export-incidents-csv' %}" class="btn btn-sm btn-outline-secondary fw-semibold px-2 py-2">
+                <i class="fa-solid fa-file-csv me-1"></i> Export CSV
+            </a>
+            <button class="btn btn-primary btn-sm fw-semibold px-3 py-2" onclick="toggleIncidentForm()">
+                <i class="fa-solid fa-plus me-1"></i> Log Incident
+            </button>
+        </div>
+    </div>
+
+
+    <!-- Log Incident Form Card -->
+    <div class="main-card" id="incidentFormCard" style="display: none;">
+        <div class="main-card-header">
+            <h5 class="card-title-text"><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>AI-Powered Log Incident Form</h5>
+            <button class="btn-close" onclick="toggleIncidentForm()"></button>
+        </div>
+        <div class="main-card-body">
+            <form method="POST" action="{% url 'incidents-list' %}">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.825rem;">Short Title</label>
+                        <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g. Printer floor 3 not printing" required id="id_title">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.825rem;">Category</label>
+                        <select name="category" class="form-select form-select-sm" id="id_category">
+                            <option value="Software">Software</option>
+                            <option value="Hardware">Hardware</option>
+                            <option value="Network">Network</option>
+                            <option value="Database">Database</option>
+                            <option value="Access">Access Access</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.825rem;">Urgency</label>
+                        <select name="urgency" class="form-select form-select-sm">
+                            <option value="LOW">Low</option>
+                            <option value="MEDIUM" selected>Medium</option>
+                            <option value="HIGH">High</option>
+                        </select>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.825rem;">Description</label>
+                        <textarea name="description" class="form-control form-control-sm" rows="3" placeholder="Describe the issue in detail..." required id="id_description"></textarea>
+                    </div>
+                </div>
+                
+                <!-- AI Smart suggestions box -->
+                <div class="bg-light p-3 rounded mb-3" style="display: none;" id="aiSuggestionBox">
+                    <h6 class="fw-bold text-primary mb-1" style="font-size: 0.8rem;"><i class="fa-solid fa-brain me-1"></i> AI Predictor Insights:</h6>
+                    <p class="m-0 text-muted" style="font-size: 0.775rem;">
+                        Category: <strong id="suggestedCat" class="text-dark"></strong> | 
+                        Priority: <strong id="suggestedPriority" class="text-dark"></strong><br>
+                        Suggested Resolution: <span id="suggestedRes" class="text-dark italic"></span>
+                    </p>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" onclick="toggleIncidentForm()">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary px-3">Create Incident</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Incidents Table Card -->
+    <div class="main-card">
+        <div class="main-card-header">
+            <h5 class="card-title-text">All Active Incidents</h5>
+        </div>
+        <div class="main-card-body p-0">
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Short Description</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>SLA State</th>
+                            <th>Assigned Agent</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inc in incidents %}
+                        <tr style="cursor: pointer;" onclick="window.location.href='{% url 'incident-detail' inc.id %}'">
+                            <td class="fw-bold text-primary" style="font-size: 0.825rem;">{{ inc.ticket_number }}</td>
+                            <td>
+                                <div class="text-white fw-bold">{{ inc.title }}</div>
+                                <div class="text-white fw-bold" style="font-size: 0.775rem; max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.85;">{{ inc.description }}</div>
+                            </td>
+                            <td>{{ inc.category }}</td>
+                            <td><span class="badge-priority {{ inc.priority|lower }}">{{ inc.priority }}</span></td>
+                            <td><span class="badge-status {{ inc.status|lower }}">{{ inc.get_status_display }}</span></td>
+                            <td>
+                                <span class="badge bg-{% if inc.sla_status == 'BREACHED' %}danger{% else %}success{% endif %} text-white" style="font-size: 0.7rem; font-weight: 700;">
+                                    {{ inc.sla_status }}
+                                </span>
+                            </td>
+                            <td>{{ inc.assigned_to.username|default:"Unassigned" }}</td>
+                            <td>
+                                <div class="d-flex gap-1" onclick="event.stopPropagation();">
+                                    {% if not inc.assigned_to and request.user.role == 'IT_SUPPORT' %}
+                                        <button class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.725rem;" onclick="assignTicket('{{ inc.id }}')">Claim</button>
+                                    {% endif %}
+                                    
+                                    {% if inc.status != 'RESOLVED' and inc.status != 'CLOSED' and request.user.role == 'IT_SUPPORT' and inc.assigned_to == request.user %}
+                                        <button class="btn btn-xs btn-success py-0 px-2 text-white" style="font-size: 0.725rem;" onclick="openResolveModal('{{ inc.id }}')">Resolve</button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No incidents logged.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resolution Notes Modal -->
+<div class="modal fade" id="resolveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="font-size: 1rem;"><i class="fa-solid fa-circle-check text-success me-1"></i> Resolve Incident</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="resolveForm">
+                    <input type="hidden" id="resolve_ticket_id">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.8rem;">Root Cause Analysis (RCA)</label>
+                        <textarea class="form-control form-control-sm" id="resolve_root_cause" rows="2" placeholder="Describe the core cause..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.8rem;">Resolution Notes</label>
+                        <textarea class="form-control form-control-sm" id="resolve_notes" rows="3" placeholder="Explain the resolution steps taken..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-sm btn-success text-white px-3" onclick="submitResolution()">Resolve</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleIncidentForm() {
+        const form = document.getElementById('incidentFormCard');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // AI Prediction Trigger on Typing Description
+    const titleInput = document.getElementById('id_title');
+    const descInput = document.getElementById('id_description');
+    
+    let debounceTimer;
+    [titleInput, descInput].forEach(el => {
+        el.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+                const title = titleInput.value.trim();
+                const description = descInput.value.trim();
+                
+                if (title.length > 5 && description.length > 10) {
+                    try {
+                        const response = await fetch('/api/ai/intelligence/predict/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ title, description })
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            
+                            // Display Box and populate
+                            document.getElementById('suggestedCat').innerText = data.category;
+                            document.getElementById('suggestedPriority').innerText = data.priority;
+                            document.getElementById('suggestedRes').innerText = data.suggested_resolution;
+                            document.getElementById('aiSuggestionBox').style.display = 'block';
+                            
+                            // Auto select category
+                            const catSelect = document.getElementById('id_category');
+                            for (let opt of catSelect.options) {
+                                if (opt.value.toLowerCase() === data.category.toLowerCase()) {
+                                    opt.selected = true;
+                                    break;
+                                }
+                            }
+                        }
+                    } catch(e) {}
+                }
+            }, 800);
+        });
+    });
+
+    async function assignTicket(id) {
+        try {
+            const response = await fetch(`/api/service_desk/incidents/${id}/assign-to-me/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            if (response.ok) {
+                location.reload();
+            }
+        } catch(e) {}
+    }
+
+    let bsResolveModal;
+    function openResolveModal(id) {
+        document.getElementById('resolve_ticket_id').value = id;
+        bsResolveModal = new bootstrap.Modal(document.getElementById('resolveModal'));
+        bsResolveModal.show();
+    }
+
+    async function submitResolution() {
+        const id = document.getElementById('resolve_ticket_id').value;
+        const notes = document.getElementById('resolve_notes').value.trim();
+        const rca = document.getElementById('resolve_root_cause').value.trim();
+
+        if (!notes) {
+            alert('Resolution notes are required.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/service_desk/incidents/${id}/resolve/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ resolution_notes: notes, root_cause: rca })
+            });
+            if (response.ok) {
+                bsResolveModal.hide();
+                location.reload();
+            } else {
+                const err = await response.json();
+                alert(err.error || 'Failed to resolve incident.');
+            }
+        } catch(e) {
+            alert('An error occurred.');
+        }
+    }
+</script>
+{% endblock %}

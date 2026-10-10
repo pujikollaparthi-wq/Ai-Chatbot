@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}AIOPS Platform - Knowledge Base{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="mb-4">
+        <h4 class="fw-bold m-0" style="font-size: 1.35rem;">Knowledge Base</h4>
+        <span class="text-muted" style="font-size: 0.85rem;">Find self-service articles, guidebooks, and troubleshooting procedures.</span>
+    </div>
+
+    <!-- Articles Layout -->
+    <div class="row g-4">
+        {% for article in articles %}
+        <div class="col-md-6 col-lg-4">
+            <div class="main-card h-100 mb-0 d-flex flex-column justify-content-between">
+                <div class="main-card-header py-2 border-bottom border-secondary">
+                    <span class="badge bg-primary text-white" style="font-size: 0.65rem;">{{ article.category }}</span>
+                    <span class="text-muted" style="font-size: 0.725rem;"><i class="fa-solid fa-eye me-1"></i>{{ article.views }} views</span>
+                </div>
+                <div class="main-card-body">
+                    <h5 class="fw-bold mb-2" style="font-size: 0.95rem;">{{ article.title }}</h5>
+                    <p class="text-white fw-bold" style="font-size: 0.825rem; line-height: 1.5; height: 75px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; opacity: 0.85;">
+                        {{ article.content }}
+                    </p>
+                </div>
+                <div class="p-3 border-top border-secondary d-flex align-items-center justify-content-between">
+                    <span class="text-white fw-bold" style="font-size: 0.725rem; opacity: 0.85;">By {{ article.author.username }}</span>
+                    <button class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.75rem;" onclick="readArticle('{{ article.title }}', `{{ article.content }}`)">Read Article</button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="main-card p-4 text-center text-muted">
+                No knowledge base articles published.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal to read full article content -->
+<div class="modal fade" id="articleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="article_title" style="font-size: 1.05rem;"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="article_content" class="text-dark" style="white-space: pre-line; line-height: 1.6; font-size: 0.9rem;"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let bsArticleModal;
+    function readArticle(title, content) {
+        document.getElementById('article_title').innerText = title;
+        document.getElementById('article_content').innerText = content;
+        bsArticleModal = new bootstrap.Modal(document.getElementById('articleModal'));
+        bsArticleModal.show();
+    }
+</script>
+{% endblock %}

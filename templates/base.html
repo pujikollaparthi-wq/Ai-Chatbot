@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AIOPS Platform - AI-Powered Enterprise Operations{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Theme Stylesheet -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=6">
+    <script>
+        // Apply theme immediately to prevent flashing
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
+    <style>
+        /* Floating Chat Widget Styles */
+        .floating-chat-trigger {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+            cursor: pointer;
+            z-index: 1000;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        .floating-chat-trigger:hover {
+            transform: scale(1.05);
+            background-color: #3b30bd;
+        }
+        .floating-chat-container {
+            position: fixed;
+            bottom: 105px;
+            right: 30px;
+            width: 380px;
+            background-color: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+        .main-card {
+            background: rgba(12, 12, 28, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.45);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .floating-chat-header {
+            background-color: var(--bg-sidebar);
+            color: #ffffff;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .floating-chat-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+        }
+        .floating-chat-close {
+            background: none;
+            border: none;
+            color: var(--sidebar-text);
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .floating-chat-close:hover {
+            color: #ffffff;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        {% include 'sidebar.html' %}
+        
+        <!-- Main Application Wrapper -->
+        <div class="main-wrapper">
+            <!-- Top Navbar Header -->
+            {% include 'navbar.html' %}
+            
+            <!-- Page Content Body -->
+            <div class="content-body">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    {% if request.user.is_authenticated %}
+    <!-- Floating Chat Assistant Trigger Button -->
+    <div class="floating-chat-trigger" id="chatTriggerBtn" onclick="toggleFloatingChat()">
+        <i class="fa-solid fa-robot"></i>
+    </div>
+
+    <!-- Floating Chatbot Assistant Card Container -->
+    <div class="floating-chat-container" id="chatContainer">
+        <div class="floating-chat-header">
+            <h5 class="floating-chat-title"><i class="fa-solid fa-brain text-primary"></i> AI Operations Assistant</h5>
+            <button class="floating-chat-close" onclick="toggleFloatingChat()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="main-card-body">
+            <div class="ai-chat-card">
+                <div class="chat-messages" id="floatingChatMessages">
+                    <div class="chat-bubble ai">
+                        Hello! I am your AI Operations Assistant. How can I help you today?
+                    </div>
+                </div>
+                <div class="chat-quick-actions">
+                    <button class="quick-action-btn" onclick="sendQuickMessage('Show open high priority incidents')">Show incidents</button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('What are the SLA breaches?')">SLA breaches</button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('Predict incidents for tomorrow')">Predict tomorrow</button>
+                </div>
+                <div class="chat-input-wrapper">
+                    <input type="text" id="floatingChatInput" placeholder="Type your question..." onkeypress="handleChatKeypress(event)">
+                    <button class="chat-send-btn" onclick="sendFloatingMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bootstrap 5 JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Floating Chatbot JS Scripts -->
+    <script>
+        // Global variables for session
+        const sessionID = "{{ chat_session_id|default:'' }}";
+
+        function toggleFloatingChat() {
+            const chatBox = document.getElementById('chatContainer');
+            if (chatBox.style.display === 'none' || chatBox.style.display === '') {
+                chatBox.style.display = 'flex';
+                document.getElementById('floatingChatInput').focus();
+            } else {
+                chatBox.style.display = 'none';
+            }
+        }
+
+        function appendMessage(sender, text) {
+            const chatMessages = document.getElementById('floatingChatMessages');
+            const bubble = document.createElement('div');
+            bubble.classList.add('chat-bubble', sender === 'USER' ? 'user' : 'ai');
+            bubble.innerText = text;
+            chatMessages.appendChild(bubble);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendChatMessage(text) {
+            appendMessage('USER', text);
+            
+            // Show typing indicator
+            const chatMessages = document.getElementById('floatingChatMessages');
+            const typingBubble = document.createElement('div');
+            typingBubble.classList.add('chat-bubble', 'ai');
+            typingBubble.id = 'typingIndicator';
+            typingBubble.innerHTML = '<i class="fa-solid fa-ellipsis fa-fade"></i> AI is thinking...';
+            chatMessages.appendChild(typingBubble);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const response = await fetch(`/api/ai/chat/${sessionID ? sessionID + '/send-message/' : ''}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ message: text })
+                });
+                
+                // Remove typing indicator
+                const indicator = document.getElementById('typingIndicator');
+                if (indicator) indicator.remove();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    appendMessage('AI', data.message);
+                } else {
+                    appendMessage('AI', "I'm sorry, I'm having trouble connecting right now.");
+                }
+            } catch (e) {
+                const indicator = document.getElementById('typingIndicator');
+                if (indicator) indicator.remove();
+                appendMessage('AI', "An error occurred. Please try again.");
+            }
+        }
+
+        function sendFloatingMessage() {
+            const input = document.getElementById('floatingChatInput');
+            const text = input.value.trim();
+            if (text) {
+                sendChatMessage(text);
+                input.value = '';
+            }
+        }
+
+        function handleChatKeypress(event) {
+            if (event.key === 'Enter') {
+                sendFloatingMessage();
+            }
+        }
+
+        function sendQuickMessage(text) {
+            sendChatMessage(text);
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

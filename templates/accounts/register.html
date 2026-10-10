@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AIOPS Platform - Register{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .glass-card {
+        background: rgba(10, 10, 30, 0.55);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        width: 600px;
+        box-shadow:
+            0 0 0 1px rgba(255,255,255,0.04) inset,
+            0 8px 40px rgba(0,0,0,0.6),
+            0 0 60px rgba(79,70,229,0.12);
+        animation: fadeUp 0.6s ease-out both;
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-logo {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #ffffff;
+        letter-spacing: -0.03em;
+        text-align: center;
+        margin-bottom: 0.4rem;
+        text-decoration: none !important;
+        display: block;
+    }
+    .auth-logo i { color: #818cf8; margin-right: 0.4rem; }
+
+    .auth-subtitle {
+        text-align: center;
+        color: rgba(255,255,255,0.5);
+        font-size: 0.85rem;
+        margin-bottom: 2rem;
+    }
+
+    .glass-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: rgba(255,255,255,0.65);
+        margin-bottom: 0.35rem;
+        display: block;
+        letter-spacing: 0.03em;
+    }
+
+    .glass-input {
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        color: #ffffff !important;
+        padding: 0.75rem 0.9rem !important;
+        font-size: 0.88rem !important;
+        border-radius: 0.65rem !important;
+        transition: all 0.2s ease !important;
+        width: 100%;
+    }
+    .glass-input::placeholder { color: rgba(255,255,255,0.28) !important; }
+    .glass-input:focus {
+        background: rgba(255,255,255,0.1) !important;
+        border-color: rgba(99,102,241,0.6) !important;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.2) !important;
+        outline: none !important;
+        color: #fff !important;
+    }
+    /* Style select dropdowns */
+    .glass-input option {
+        background: #1e1e3a;
+        color: #fff;
+    }
+
+    .btn-register {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: #fff;
+        border: none;
+        padding: 0.85rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        border-radius: 0.65rem;
+        width: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(16,185,129,0.35);
+        letter-spacing: 0.02em;
+    }
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(16,185,129,0.5);
+        background: linear-gradient(135deg, #047857, #059669);
+        color: #fff;
+    }
+
+    .auth-link {
+        color: #818cf8;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .auth-link:hover { color: #a5b4fc; text-decoration: underline; }
+
+    .section-divider {
+        border: none;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        margin: 1.25rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="glass-card">
+
+        <a href="/" class="auth-logo">
+            <i class="fa-solid fa-microchip"></i>AIOPS Portal
+        </a>
+        <p class="auth-subtitle">Create your operations workspace account</p>
+
+        {% if errors %}
+        <div class="alert py-2 px-3 mb-4 border-0 bg-danger text-white rounded-3" style="font-size:0.8rem;--bs-bg-opacity:0.85;">
+            <i class="fa-solid fa-circle-exclamation me-1"></i>
+            {% for field, field_errors in errors.items %}
+                <strong>{{ field|title }}:</strong> {{ field_errors|join:", " }}<br>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'register' %}">
+            {% csrf_token %}
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="glass-label">Username</label>
+                    <input type="text" name="username" class="glass-input" placeholder="e.g. pujitha_k" required value="{{ data.username|default:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="glass-label">Email</label>
+                    <input type="email" name="email" class="glass-input" placeholder="you@enterprise.com" required value="{{ data.email|default:'' }}">
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="glass-label">First Name</label>
+                    <input type="text" name="first_name" class="glass-input" placeholder="First Name" required value="{{ data.first_name|default:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="glass-label">Last Name</label>
+                    <input type="text" name="last_name" class="glass-input" placeholder="Last Name" required value="{{ data.last_name|default:'' }}">
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="glass-label">Role</label>
+                    <select name="role" class="glass-input" required>
+                        <option value="" disabled {% if not data.role %}selected{% endif %} style="color:rgba(255,255,255,0.3);">Select Role</option>
+                        {% for role_code, role_name in roles %}
+                            <option value="{{ role_code }}" {% if data.role == role_code %}selected{% endif %}>{{ role_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="glass-label">Department</label>
+                    <select name="department" class="glass-input">
+                        <option value="" {% if not data.department %}selected{% endif %}>None (Independent)</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if data.department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="glass-label">Employee ID</label>
+                    <input type="text" name="employee_id" class="glass-input" placeholder="EMP1234" value="{{ data.employee_id|default:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="glass-label">Phone Number</label>
+                    <input type="text" name="phone_number" class="glass-input" placeholder="+91 81792 XXXXX" value="{{ data.phone_number|default:'' }}">
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="glass-label">Password</label>
+                    <input type="password" name="password" class="glass-input" placeholder="Minimum 8 characters" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="glass-label">Confirm Password</label>
+                    <input type="password" name="password_confirm" class="glass-input" placeholder="Re-type password" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-register mb-3">
+                <i class="fa-solid fa-rocket me-2"></i>Create Account & Join Operations
+            </button>
+        </form>
+
+        <p class="text-center m-0" style="font-size:0.85rem; color:rgba(255,255,255,0.45);">
+            Already have an account? <a href="{% url 'login' %}" class="auth-link">Sign in here</a>
+        </p>
+
+    </div>
+</div>
+{% endblock %}

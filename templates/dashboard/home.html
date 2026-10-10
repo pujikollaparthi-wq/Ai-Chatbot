@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AIOPS Platform - AI-Powered Enterprise Operations{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Reset main content area for full-bleed hero ── */
+    .main-content {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #000 !important;
+    }
+
+    /* ── HERO FULLSCREEN ── */
+    .hero-fullscreen {
+        min-height: 100vh;
+        width: 100%;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        overflow: hidden;
+        background: #000;
+    }
+
+    /* Background image layer */
+    .hero-bg {
+        position: absolute;
+        inset: 0;
+        background-image: url("{% static 'img/hero_bg.png' %}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        filter: brightness(0.65);
+        transform: scale(1.04);
+        animation: slowZoom 20s ease-in-out infinite alternate;
+    }
+    @keyframes slowZoom {
+        from { transform: scale(1.0); }
+        to   { transform: scale(1.08); }
+    }
+
+    /* Gradient overlay for readability */
+    .hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at center, rgba(10,10,30,0.35) 0%, rgba(0,0,0,0.72) 100%);
+    }
+
+    /* Animated floating particles */
+    .particles {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .particle {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(99, 102, 241, 0.6);
+        animation: floatParticle linear infinite;
+    }
+    @keyframes floatParticle {
+        0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+        10%  { opacity: 1; }
+        90%  { opacity: 1; }
+        100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    }
+
+    /* ── HERO CONTENT ── */
+    .hero-content {
+        position: relative;
+        z-index: 10;
+        padding: 2rem 1.5rem;
+        max-width: 900px;
+        width: 100%;
+    }
+
+    /* Badge */
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 1.25rem;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #a5b4fc;
+        background: rgba(79, 70, 229, 0.18);
+        border: 1px solid rgba(99, 102, 241, 0.4);
+        margin-bottom: 2rem;
+        backdrop-filter: blur(8px);
+        animation: fadeDown 0.8s ease-out both;
+    }
+    @keyframes fadeDown {
+        from { opacity: 0; transform: translateY(-16px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── 3D TITLE ── */
+    .hero-title-3d {
+        font-size: clamp(2.8rem, 6vw, 5.5rem);
+        font-weight: 900;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        margin-bottom: 1.5rem;
+        animation: fadeUp 0.9s ease-out 0.15s both;
+
+        /* 3D Text Effect */
+        color: #ffffff;
+        text-shadow:
+            0 1px 0 #ccc,
+            0 2px 0 #c9c9c9,
+            0 3px 0 #bbb,
+            0 4px 0 #b9b9b9,
+            0 5px 0 #aaa,
+            0 6px 1px rgba(0,0,0,.1),
+            0 0 5px rgba(0,0,0,.1),
+            0 1px 3px rgba(0,0,0,.3),
+            0 3px 5px rgba(0,0,0,.2),
+            0 5px 10px rgba(0,0,0,.25),
+            0 10px 10px rgba(0,0,0,.2),
+            0 20px 20px rgba(0,0,0,.15);
+    }
+    .hero-title-3d .gradient-word {
+        background: linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 0 30px rgba(99,102,241,0.6));
+        text-shadow: none;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Subtitle */
+    .hero-subtitle {
+        font-size: clamp(1rem, 2vw, 1.2rem);
+        color: rgba(255,255,255,0.75);
+        line-height: 1.7;
+        max-width: 680px;
+        margin: 0 auto 2.5rem;
+        animation: fadeUp 0.9s ease-out 0.3s both;
+    }
+
+    /* CTA Buttons */
+    .hero-cta {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        animation: fadeUp 0.9s ease-out 0.45s both;
+    }
+    .btn-hero-primary {
+        padding: 0.9rem 2.4rem;
+        font-size: 1rem;
+        font-weight: 700;
+        border-radius: 0.75rem;
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        color: #fff;
+        border: none;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        box-shadow: 0 4px 30px rgba(79,70,229,0.5);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .btn-hero-primary::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, #6366f1, #818cf8);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 40px rgba(79,70,229,0.65); color: #fff; text-decoration: none; }
+    .btn-hero-primary:hover::before { opacity: 1; }
+    .btn-hero-primary span { position: relative; z-index: 1; }
+    .btn-hero-primary i { position: relative; z-index: 1; }
+
+    .btn-hero-secondary {
+        padding: 0.9rem 2.4rem;
+        font-size: 1rem;
+        font-weight: 700;
+        border-radius: 0.75rem;
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.25);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    .btn-hero-secondary:hover { transform: translateY(-3px); background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.5); color: #fff; text-decoration: none; }
+
+    /* Stats Bar */
+    .hero-stats {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        margin-top: 3.5rem;
+        flex-wrap: wrap;
+        animation: fadeUp 0.9s ease-out 0.6s both;
+        position: relative;
+        z-index: 10;
+    }
+    .stat-item {
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #fff;
+        display: block;
+        line-height: 1;
+        background: linear-gradient(135deg, #818cf8, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .stat-label {
+        font-size: 0.78rem;
+        color: rgba(255,255,255,0.55);
+        margin-top: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        font-weight: 600;
+    }
+    .stat-divider {
+        width: 1px;
+        background: rgba(255,255,255,0.15);
+        align-self: stretch;
+    }
+
+    /* Scroll Indicator */
+    .scroll-indicator {
+        position: absolute;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        color: rgba(255,255,255,0.4);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        animation: bounce 2s ease-in-out infinite;
+    }
+    @keyframes bounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50%       { transform: translateX(-50%) translateY(8px); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero-fullscreen">
+    <!-- Background Image -->
+    <div class="hero-bg"></div>
+
+    <!-- Dark Overlay -->
+    <div class="hero-overlay"></div>
+
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Main Content -->
+    <div class="hero-content">
+        <!-- Badge -->
+        <div class="hero-badge">
+            <i class="fa-solid fa-microchip"></i>
+            AI-Powered Enterprise ITSM Platform
+        </div>
+
+        <!-- 3D Title -->
+        <h1 class="hero-title-3d">
+            Intelligent<br>
+            <span class="gradient-word">AIOps Command</span><br>
+            Center
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="hero-subtitle">
+            Unify incident management, AI predictions, SLA monitoring,
+            approval workflows & asset tracking — all in one intelligent platform
+            built for modern enterprises.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="hero-cta">
+            <a href="{% url 'register' %}" class="btn-hero-primary">
+                <i class="fa-solid fa-rocket"></i>
+                <span>Get Started — Register</span>
+            </a>
+            <a href="{% url 'login' %}" class="btn-hero-secondary">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Sign In to Portal
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="hero-stats">
+            <div class="stat-item">
+                <span class="stat-number">99.9%</span>
+                <div class="stat-label">SLA Accuracy</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">3x</span>
+                <div class="stat-label">Faster Resolution</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">AI</span>
+                <div class="stat-label">Auto Classification</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">24/7</span>
+                <div class="stat-label">Real-Time Monitoring</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Hint -->
+    <div class="scroll-indicator">
+        <i class="fa-solid fa-chevron-down"></i>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Generate floating particles dynamically
+    const container = document.getElementById('particles');
+    const colors = ['rgba(99,102,241,0.7)', 'rgba(6,182,212,0.5)', 'rgba(139,92,246,0.5)', 'rgba(255,255,255,0.3)'];
+    for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 4 + 2;
+        p.style.cssText = `
+            width: ${size}px;
+            height: ${size}px;
+            left: ${Math.random() * 100}%;
+            animation-duration: ${Math.random() * 15 + 10}s;
+            animation-delay: ${Math.random() * 10}s;
+            background: ${colors[Math.floor(Math.random() * colors.length)]};
+        `;
+        container.appendChild(p);
+    }
+</script>
+{% endblock %}

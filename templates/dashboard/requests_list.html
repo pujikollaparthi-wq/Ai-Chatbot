@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}AIOPS Platform - Service Requests Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold m-0" style="font-size: 1.35rem;">Service Request Management</h4>
+        <button class="btn btn-primary btn-sm fw-semibold px-3 py-2" onclick="toggleRequestForm()">
+            <i class="fa-solid fa-plus me-1"></i> Submit Request
+        </button>
+    </div>
+
+    <!-- Submit Request Catalog Form Card -->
+    <div class="main-card" id="requestFormCard" style="display: none;">
+        <div class="main-card-header">
+            <h5 class="card-title-text"><i class="fa-solid fa-folder-open text-primary me-2"></i>Service Request Catalog</h5>
+            <button class="btn-close" onclick="toggleRequestForm()"></button>
+        </div>
+        <div class="main-card-body">
+            <form method="POST" action="{% url 'requests-list' %}">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.825rem;">Request Title</label>
+                        <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g. License access for Figma editor" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.825rem;">Request Type</label>
+                        <select name="request_type" class="form-select form-select-sm" id="requestTypeSelect" onchange="adjustRequestFields()">
+                            <option value="LEAVE">Leave Request</option>
+                            <option value="ASSET">Hardware Asset Allocation</option>
+                            <option value="SOFTWARE">Software License Access</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Dynamic inputs container -->
+                <div class="row border p-3 rounded mb-3 bg-light" id="dynamicFieldsContainer">
+                    <!-- Default LEAVE Fields -->
+                    <div class="col-md-4 mb-2 leave-fields">
+                        <label class="form-label text-muted" style="font-size: 0.775rem;">Start Date</label>
+                        <input type="date" name="start_date" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-4 mb-2 leave-fields">
+                        <label class="form-label text-muted" style="font-size: 0.775rem;">End Date</label>
+                        <input type="date" name="end_date" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-4 mb-2 leave-fields">
+                        <label class="form-label text-muted" style="font-size: 0.775rem;">Reason</label>
+                        <input type="text" name="reason" class="form-control form-control-sm" placeholder="Annual vacation, etc.">
+                    </div>
+
+                    <!-- ASSET Fields (Hidden initially) -->
+                    <div class="col-md-6 mb-2 asset-fields" style="display: none;">
+                        <label class="form-label text-muted" style="font-size: 0.775rem;">Requested Asset Type</label>
+                        <select name="asset_type" class="form-select form-select-sm">
+                            <option value="LAPTOP">ThinkPad Laptop</option>
+                            <option value="MONITOR">Dell 27" 4K Monitor</option>
+                            <option value="MOBILE">iPhone Corporate Mobile</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-2 asset-fields" style="display: none;">
+                        <label class="form-label text-muted" style="font-size: 0.775rem;">Business Reason</label>
+                        <input type="text" name="reason" class="form-control form-control-sm" placeholder="Need secondary screen, etc.">
+                    </div>
+
+                    <!-- SOFTWARE Fields (Hidden initially) -->
+                    <div class="col-md-6 mb-2 software-fields" style="display: none;">
+                        <label class="form-label text-muted" style="font-size: 0.775rem;">Software Name</label>
+                        <input type="text" name="software_name" class="form-control form-control-sm" placeholder="e.g. Figma, Adobe CC, Zoom Pro">
+                    </div>
+                    <div class="col-md-6 mb-2 software-fields" style="display: none;">
+                        <label class="form-label text-muted" style="font-size: 0.775rem;">Business Justification</label>
+                        <input type="text" name="reason" class="form-control form-control-sm" placeholder="UI styling and layout prototyping.">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" onclick="toggleRequestForm()">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary px-3">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Active Service Requests List -->
+    <div class="main-card">
+        <div class="main-card-header">
+            <h5 class="card-title-text">Workflow Service Requests</h5>
+        </div>
+        <div class="main-card-body p-0">
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Request Title</th>
+                            <th>Type</th>
+                            <th>Requester</th>
+                            <th>Status</th>
+                            <th>Date Submitted</th>
+                            <th>Approvals Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                        <tr>
+                            <td class="fw-bold text-primary" style="font-size: 0.825rem;">{{ req.ticket_number }}</td>
+                            <td class="fw-semibold">{{ req.title }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ req.get_request_type_display }}</span></td>
+                            <td>{{ req.requester.username }}</td>
+                            <td><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></td>
+                            <td>{{ req.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <!-- Workflow approval badges -->
+                                <div class="d-flex gap-1">
+                                    {% for approval in req.approvals.all %}
+                                        <span class="badge bg-{% if approval.status == 'APPROVED' %}success{% elif approval.status == 'REJECTED' %}danger{% else %}warning{% endif %} text-white" 
+                                              style="font-size: 0.65rem;" 
+                                              title="{{ approval.approver.username|default:'Approver' }} (L{{ approval.step.step_number }})">
+                                            L{{ approval.step.step_number }}: {{ approval.status }}
+                                        </span>
+                                    {% empty %}
+                                        <span class="text-muted" style="font-size: 0.75rem;">Auto-Approved</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>
+                                <!-- Approval actions if requesting user is the assigned approver for a pending level -->
+                                <div class="d-flex gap-1">
+                                    {% for approval in req.approvals.all %}
+                                        {% if approval.status == 'PENDING' and approval.approver == request.user %}
+                                            <button class="btn btn-xs btn-success py-0 px-2 text-white" style="font-size: 0.7rem;" onclick="approveRequest('{{ approval.id }}')">Approve</button>
+                                            <button class="btn btn-xs btn-danger py-0 px-2 text-white" style="font-size: 0.7rem;" onclick="rejectRequestPrompt('{{ approval.id }}')">Reject</button>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No service requests logged.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rejection Comments Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="font-size: 1rem;"><i class="fa-solid fa-circle-xmark text-danger me-1"></i> Reject Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="rejectForm">
+                    <input type="hidden" id="reject_approval_id">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.8rem;">Rejection Justification</label>
+                        <textarea class="form-control form-control-sm" id="reject_comments" rows="3" placeholder="Provide reason for rejection..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-sm btn-danger text-white px-3" onclick="submitRejection()">Reject</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleRequestForm() {
+        const form = document.getElementById('requestFormCard');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function adjustRequestFields() {
+        const type = document.getElementById('requestTypeSelect').value;
+        const leaveFields = document.querySelectorAll('.leave-fields');
+        const assetFields = document.querySelectorAll('.asset-fields');
+        const softwareFields = document.querySelectorAll('.software-fields');
+
+        // Hide all
+        leaveFields.forEach(el => el.style.display = 'none');
+        assetFields.forEach(el => el.style.display = 'none');
+        softwareFields.forEach(el => el.style.display = 'none');
+
+        // Enable inputs for active ones, disable for hidden to avoid posting wrong fields
+        toggleInputs(leaveFields, false);
+        toggleInputs(assetFields, false);
+        toggleInputs(softwareFields, false);
+
+        if (type === 'LEAVE') {
+            leaveFields.forEach(el => el.style.display = 'block');
+            toggleInputs(leaveFields, true);
+        } else if (type === 'ASSET') {
+            assetFields.forEach(el => el.style.display = 'block');
+            toggleInputs(assetFields, true);
+        } else if (type === 'SOFTWARE') {
+            softwareFields.forEach(el => el.style.display = 'block');
+            toggleInputs(softwareFields, true);
+        }
+    }
+
+    function toggleInputs(elements, enabled) {
+        elements.forEach(div => {
+            const inputs = div.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => input.disabled = !enabled);
+        });
+    }
+
+    // Initialize fields
+    adjustRequestFields();
+
+    async function approveRequest(approvalId) {
+        try {
+            const response = await fetch(`/api/service_desk/approvals/${approvalId}/approve/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ comments: 'Approved via browser dashboard.' })
+            });
+            if (response.ok) {
+                location.reload();
+            }
+        } catch(e) {}
+    }
+
+    let bsRejectModal;
+    function rejectRequestPrompt(approvalId) {
+        document.getElementById('reject_approval_id').value = approvalId;
+        bsRejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+        bsRejectModal.show();
+    }
+
+    async function submitRejection() {
+        const approvalId = document.getElementById('reject_approval_id').value;
+        const comments = document.getElementById('reject_comments').value.trim();
+
+        if (!comments) {
+            alert('Rejection comments are required.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/service_desk/approvals/${approvalId}/reject/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ comments })
+            });
+            if (response.ok) {
+                bsRejectModal.hide();
+                location.reload();
+            } else {
+                alert('Failed to process rejection.');
+            }
+        } catch(e) {
+            alert('An error occurred.');
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}AIOPS Platform - Known Problems{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="mb-4">
+        <h4 class="fw-bold m-0" style="font-size: 1.35rem;">Problem Management</h4>
+        <span class="text-muted" style="font-size: 0.85rem;">Identify, log, and resolve root causes of recurring incidents.</span>
+    </div>
+
+    <!-- Problems Queue Table Card -->
+    <div class="main-card">
+        <div class="main-card-header">
+            <h5 class="card-title-text">Known Problems Registry (CMDB Linked)</h5>
+        </div>
+        <div class="main-card-body p-0">
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Problem ID</th>
+                            <th>Problem Title</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Known Error</th>
+                            <th>Workaround</th>
+                            <th>Assignee</th>
+                            <th>Date Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prob in problems %}
+                        <tr>
+                            <td class="fw-bold text-danger" style="font-size: 0.825rem;">{{ prob.ticket_number }}</td>
+                            <td class="fw-semibold">{{ prob.title }}</td>
+                            <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ prob.description }}</td>
+                            <td><span class="badge bg-light text-dark border fw-bold">{{ prob.get_status_display }}</span></td>
+                            <td>
+                                {% if prob.known_error %}
+                                    <span class="badge bg-danger text-white">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary text-white">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="italic text-muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ prob.workaround }}">{{ prob.workaround|default:"No workaround logged." }}</td>
+                            <td>{{ prob.assigned_to.username|default:"Unassigned" }}</td>
+                            <td>{{ prob.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No problems registered.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background: url('/static/bg.jpg');
+            background-size: cover;
+            color: white;
+            text-align: center;
+            font-family: Arial;
+        }
+        .box {
+            background: rgba(0,0,0,0.5);
+            padding: 30px;
+            width: 40%;
+            margin: auto;
+            margin-top: 100px;
+            border-radius: 10px;
+        }
+        input {
+            width: 80%;
+            padding: 12px;
+            margin: 10px;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background: green;
+            color: #fff;
+            border-radius: 5px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>User Login</h2>
+    <form action="/login" method="POST">
+        <input type="email" name="email" placeholder="Email"><br>
+        <input type="password" name="password" placeholder="Password"><br>
+        <button type="submit">Login</button>
+    </form>
+
+    <p>New user? <a href="/register" style="color:yellow;">Register</a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}AIOPS Platform - Change Requests{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="mb-4">
+        <h4 class="fw-bold m-0" style="font-size: 1.35rem;">Change Management</h4>
+        <span class="text-muted" style="font-size: 0.85rem;">Plan, approve, and track configuration changes with minimal business impact.</span>
+    </div>
+
+    <!-- Changes Queue Table Card -->
+    <div class="main-card">
+        <div class="main-card-header">
+            <h5 class="card-title-text">Change Requests Catalog</h5>
+        </div>
+        <div class="main-card-body p-0">
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Change ID</th>
+                            <th>Change Title</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Risk Assessment</th>
+                            <th>Requested By</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for change in changes %}
+                        <tr>
+                            <td class="fw-bold text-success" style="font-size: 0.825rem;">{{ change.ticket_number }}</td>
+                            <td class="fw-semibold">{{ change.title }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ change.get_change_type_display }}</span></td>
+                            <td><span class="badge-status {{ change.status|lower }}">{{ change.get_status_display }}</span></td>
+                            <td><span class="badge bg-{% if change.risk == 'HIGH' %}danger{% elif change.risk == 'MEDIUM' %}warning{% else %}success{% endif %} text-white">{{ change.get_risk_display }}</span></td>
+                            <td>{{ change.requested_by.username }}</td>
+                            <td>{{ change.start_date|date:"M d, H:i" }}</td>
+                            <td>{{ change.end_date|date:"M d, H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No change requests scheduled.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

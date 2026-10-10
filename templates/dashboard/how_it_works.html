@@ -1,0 +1,803 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AIOps Platform - How It Works{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --border-color: #27272a;
+        --box-bg: #1e1e1e;
+        --primary-blue: #3b82f6;
+        --light-blue: #000000;
+        --text-dark: #f4f4f5;
+        --text-light: #a1a1aa;
+        --green: #10b981;
+        --orange: #f59e0b;
+        --purple: #8b5cf6;
+    }
+    
+    body {
+        background-color: #121212;
+        color: var(--text-dark);
+    }
+    
+    .infographic-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+    
+    .page-title {
+        text-align: center;
+        background: #0f172a;
+        color: white;
+        padding: 1rem;
+        font-size: 1.8rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        margin-bottom: 2rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    
+    /* Top Flow Section */
+    .flow-row {
+        display: flex;
+        align-items: stretch;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .flow-card {
+        background: var(--box-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+        position: relative;
+    }
+    
+    .flow-header {
+        padding: 0.5rem;
+        text-align: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .flow-card.c-green .flow-header { background: #064e3b; color: #a7f3d0; border-bottom: 1px solid var(--border-color); }
+    .flow-card.c-blue .flow-header { background: #1e3a8a; color: #bfdbfe; border-bottom: 1px solid var(--border-color); }
+    .flow-card.c-purple .flow-header { background: #4c1d95; color: #ddd6fe; border-bottom: 1px solid var(--border-color); }
+    .flow-card.c-orange .flow-header { background: #7c2d12; color: #fed7aa; border-bottom: 1px solid var(--border-color); }
+    
+    .flow-body {
+        padding: 1rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        font-size: 0.85rem;
+        color: var(--text-dark);
+    }
+    
+    .flow-arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #475569;
+        font-weight: bold;
+    }
+    
+    /* Specific Card Styles */
+    .icon-wrapper {
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 3rem;
+        color: var(--primary-blue);
+    }
+    
+    .ticket-form label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+        color: var(--text-dark);
+        font-size: 0.8rem;
+    }
+    .ticket-form input, .ticket-form textarea, .ticket-form select {
+        width: 100%;
+        padding: 0.4rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+        background: #0f172a;
+        color: var(--text-dark);
+    }
+    .ticket-form button {
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        padding: 0.5rem;
+        width: 100%;
+        border-radius: 4px;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+    
+    .check-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .check-list li {
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .check-list li i {
+        color: var(--purple);
+    }
+    
+    .assign-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .assign-list li {
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+    }
+    .assign-list li i {
+        width: 20px;
+        text-align: center;
+        color: var(--text-light);
+    }
+    .assign-list li i.fa-wifi { color: var(--primary-blue); }
+    .assign-list li i.fa-circle { color: var(--orange); }
+    
+    .sla-gauge {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 8px solid #22c55e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 1rem auto;
+        font-weight: bold;
+        color: #22c55e;
+        text-align: center;
+    }
+    
+    .feedback-stars {
+        color: #eab308;
+        font-size: 1.2rem;
+        text-align: center;
+        margin-top: 0.5rem;
+    }
+    
+    /* AI Capabilities Bar */
+    .capabilities-bar {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        background: var(--box-bg);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+    }
+    .cap-header {
+        text-align: center;
+        color: var(--primary-blue);
+        font-weight: 800;
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+    .cap-icons {
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+    }
+    .cap-item i {
+        font-size: 2rem;
+        color: var(--primary-blue);
+        margin-bottom: 0.5rem;
+    }
+    .cap-item p {
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin: 0;
+        color: var(--text-dark);
+    }
+    
+    /* 4 Column Bottom Section */
+    .bottom-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 2rem;
+    }
+    .grid-panel {
+        background: var(--box-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+    }
+    .grid-header {
+        background: #1e3a8a;
+        color: #bfdbfe;
+        font-weight: 700;
+        padding: 0.8rem;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 8px 8px 0 0;
+    }
+    .grid-body {
+        padding: 1rem;
+        flex: 1;
+    }
+    
+    /* Dashboard Mockup */
+    .mock-dash {
+        display: flex;
+        height: 100%;
+    }
+    .mock-sidebar {
+        width: 80px;
+        background: #0f172a;
+        color: white;
+        font-size: 0.7rem;
+        padding: 1rem 0.5rem;
+        border-right: 1px solid var(--border-color);
+    }
+    .mock-sidebar ul {
+        list-style: none;
+        padding: 0; margin: 0;
+    }
+    .mock-sidebar li {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        opacity: 0.7;
+    }
+    .mock-sidebar li.active { opacity: 1; color: #38bdf8; }
+    
+    .mock-content {
+        flex: 1;
+        padding: 0.5rem;
+    }
+    .mock-stats {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 1rem;
+    }
+    .m-stat {
+        flex: 1;
+        text-align: center;
+        background: #0f172a;
+        padding: 0.5rem;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+    }
+    .m-stat h4 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+    .m-stat p { font-size: 0.65rem; margin: 0; color: #94a3b8; }
+    
+    .mock-charts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+    .m-chart-box {
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 0.5rem;
+        height: 100px;
+        display: flex;
+        flex-direction: column;
+        background: #0f172a;
+    }
+    .m-chart-title { font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; color: var(--text-light); }
+    .m-line-chart {
+        flex: 1;
+        background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg"><path d="M0,40 L20,30 L40,35 L60,15 L80,25 L100,5" fill="none" stroke="%233b82f6" stroke-width="2"/></svg>') no-repeat center;
+        background-size: contain;
+    }
+    .m-donut-chart {
+        flex: 1;
+        border-radius: 50%;
+        border: 15px solid #3b82f6;
+        border-right-color: #ef4444;
+        border-bottom-color: #10b981;
+        border-left-color: #f59e0b;
+        width: 60px;
+        height: 60px;
+        margin: 0 auto;
+    }
+    
+    /* Modules List */
+    .module-item {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+    .module-item i {
+        font-size: 1.2rem;
+        color: var(--primary-blue);
+        width: 24px;
+        text-align: center;
+    }
+    .module-item.c-orange i { color: #f59e0b; }
+    .module-item.c-green i { color: #10b981; }
+    .module-item h5 { margin: 0; font-size: 0.9rem; font-weight: 700; color: #e2e8f0; }
+    .module-item p { margin: 0; font-size: 0.75rem; color: #94a3b8; }
+    
+    /* Chatbot Mockup */
+    .chatbot-mock {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: var(--box-bg);
+    }
+    .cb-header {
+        background: #1e3a8a;
+        color: white;
+        padding: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .cb-body {
+        padding: 1rem;
+        flex: 1;
+        background: #0f172a;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .cb-msg {
+        max-width: 80%;
+        padding: 0.6rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+    }
+    .cb-ai { background: var(--box-bg); border: 1px solid var(--border-color); align-self: flex-start; color: var(--text-dark); }
+    .cb-user { background: #1e3a8a; align-self: flex-end; color: white; }
+    
+    .cb-card {
+        background: #0f172a;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.8rem;
+        font-size: 0.75rem;
+    }
+    .cb-btn {
+        display: inline-block;
+        border: 1px solid var(--border-color);
+        padding: 4px 8px;
+        border-radius: 12px;
+        background: var(--box-bg);
+        margin-top: 5px;
+        cursor: pointer;
+        color: var(--primary-blue);
+    }
+    
+    .cb-input {
+        padding: 0.8rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #94a3b8;
+        font-size: 0.85rem;
+        background: var(--box-bg);
+    }
+    
+    /* Notifications List */
+    .noti-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .noti-bell {
+        text-align: center;
+        font-size: 2.5rem;
+        color: var(--primary-blue);
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    .noti-bell::after {
+        content: '';
+        position: absolute;
+        top: 5px; right: calc(50% - 15px);
+        width: 12px; height: 12px;
+        background: #ef4444;
+        border-radius: 50%;
+        border: 2px solid var(--box-bg);
+    }
+    .noti-item {
+        display: flex;
+        gap: 10px;
+    }
+    .noti-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+    }
+    .noti-icon.bg-blue { background: #3b82f6; }
+    .noti-icon.bg-green { background: #10b981; }
+    .noti-icon.bg-yellow { background: #f59e0b; }
+    .noti-content h6 { margin: 0; font-size: 0.85rem; font-weight: 700; color: #e2e8f0; }
+    .noti-content p { margin: 0; font-size: 0.75rem; color: #94a3b8; }
+    
+    /* Footer Process Flow */
+    .process-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.5rem;
+        background: var(--box-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+    }
+    .pf-title {
+        color: var(--primary-blue);
+        font-weight: 800;
+        margin-right: 1rem;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        text-align: center;
+    }
+    .pf-step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .pf-step i {
+        font-size: 1.5rem;
+        color: #64748b;
+    }
+    .pf-step.highlight i { color: var(--primary-blue); }
+    .pf-step.highlight-green i { color: #10b981; }
+    
+    .pf-arrow {
+        color: #334155;
+    }
+    
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="infographic-container">
+    <div class="page-title">
+        AIOPS PLATFORM – HOW IT WORKS
+    </div>
+
+    <!-- ROW 1: Flow Cards -->
+    <div class="flow-row">
+        <!-- 1. USER -->
+        <div class="flow-card c-green">
+            <div class="flow-header">1. USER</div>
+            <div class="flow-body" style="justify-content: center; text-align: center;">
+                <div class="icon-wrapper" style="margin-bottom: 0;">
+                    <img src="{% static 'img/employee.png' %}" alt="Employee Facing Issue" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #064e3b; margin-bottom: 10px;">
+                </div>
+                <p><strong>Employee faces an issue and raises a ticket</strong></p>
+            </div>
+        </div>
+        <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        
+        <!-- 2. TICKET CREATION -->
+        <div class="flow-card c-blue">
+            <div class="flow-header">2. TICKET CREATION</div>
+            <div class="flow-body">
+                <div style="font-weight: 700; margin-bottom: 10px;">Log Incident</div>
+                <div class="ticket-form">
+                    <label>Title *</label>
+                    <input type="text" value="Internet not working" readonly>
+                    <label>Description *</label>
+                    <textarea rows="3" readonly>I am unable to connect to the company network. Internet is not working since morning.</textarea>
+                    <label>Priority</label>
+                    <select disabled><option>Auto</option></select>
+                    <button type="button">Submit Ticket</button>
+                </div>
+            </div>
+        </div>
+        <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        
+        <!-- 3. AI PROCESSING -->
+        <div class="flow-card c-purple">
+            <div class="flow-header">3. AI PROCESSING</div>
+            <div class="flow-body">
+                <div class="icon-wrapper" style="color: var(--purple); font-size: 2.5rem;">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <p style="text-align: center; font-weight: 600; margin-bottom: 10px;">AI analyzes the description</p>
+                <ul class="check-list">
+                    <li><i class="fa-solid fa-check"></i> Category Prediction</li>
+                    <li><i class="fa-solid fa-check"></i> Priority Prediction</li>
+                    <li><i class="fa-solid fa-check"></i> Urgency Prediction</li>
+                    <li><i class="fa-solid fa-check"></i> Impact Analysis</li>
+                    <li><i class="fa-solid fa-check"></i> Similar Incident Search</li>
+                </ul>
+            </div>
+        </div>
+        <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        
+        <!-- 4. TICKET ASSIGNMENT -->
+        <div class="flow-card c-orange">
+            <div class="flow-header">4. TICKET ASSIGNMENT</div>
+            <div class="flow-body" style="justify-content: center;">
+                <ul class="assign-list">
+                    <li><i class="fa-solid fa-wifi"></i> Category: Network</li>
+                    <li><i class="fa-solid fa-circle" style="color: #f59e0b;"></i> Priority: Medium</li>
+                    <li><i class="fa-solid fa-circle" style="color: #f59e0b;"></i> Urgency: Medium</li>
+                    <li><i class="fa-solid fa-circle" style="color: #f59e0b;"></i> Impact: Medium</li>
+                    <li><i class="fa-solid fa-user-gear" style="color: var(--text-dark);"></i> Assigned To: support_3</li>
+                </ul>
+            </div>
+        </div>
+        <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        
+        <!-- 5. SLA MONITORING -->
+        <div class="flow-card c-green">
+            <div class="flow-header">5. SLA MONITORING</div>
+            <div class="flow-body">
+                <p style="text-align: center; font-weight: 600;">SLA Status</p>
+                <div class="sla-gauge">
+                    Within<br>SLA
+                </div>
+                <p style="text-align: center; color: var(--text-light); font-size: 0.75rem;">Due: Jun 01, 2026 01:50 PM</p>
+            </div>
+        </div>
+        <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        
+        <!-- 6. RESOLUTION -->
+        <div class="flow-card c-blue">
+            <div class="flow-header">6. RESOLUTION</div>
+            <div class="flow-body" style="justify-content: center; text-align: center;">
+                <div class="icon-wrapper" style="margin-bottom: 0;">
+                    <img src="{% static 'img/agent.png' %}" alt="Support Agent" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #1e3a8a; margin-bottom: 10px;">
+                </div>
+                <p><strong>Support agent works on the ticket and resolves the issue</strong></p>
+            </div>
+            
+            <div style="border-top: 1px solid var(--border-color); border-bottom: 0;">
+                <div class="flow-header" style="background: var(--box-bg); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); border-radius: 0; color: var(--text-dark);">7. CLOSURE & FEEDBACK</div>
+                <div class="flow-body" style="text-align: center; padding-bottom: 1rem;">
+                    <div style="color: #10b981; font-size: 2rem; margin-bottom: 5px;"><i class="fa-solid fa-circle-check"></i></div>
+                    <strong>Ticket Resolved</strong>
+                    <div class="feedback-stars">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <div style="font-size: 0.7rem; color: var(--text-light); margin-top: 5px;">User Feedback</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI CAPABILITIES BAR -->
+    <div class="capabilities-bar">
+        <div class="cap-header">AI CAPABILITIES</div>
+        <div class="cap-icons">
+            <div class="cap-item"><i class="fa-solid fa-message"></i><p>NLP Processing</p></div>
+            <div class="cap-item"><i class="fa-solid fa-file-lines"></i><p>Text Classification</p></div>
+            <div class="cap-item"><i class="fa-solid fa-arrow-trend-up"></i><p>Priority Prediction</p></div>
+            <div class="cap-item"><i class="fa-solid fa-user-check"></i><p>Auto Assignment</p></div>
+            <div class="cap-item"><i class="fa-solid fa-magnifying-glass"></i><p>Similar Incident<br>Matching</p></div>
+            <div class="cap-item"><i class="fa-solid fa-network-wired"></i><p>Root Cause<br>Analysis</p></div>
+            <div class="cap-item"><i class="fa-regular fa-lightbulb"></i><p>Resolution<br>Suggestions</p></div>
+            <div class="cap-item"><i class="fa-solid fa-chart-pie"></i><p>Predictive<br>Analytics</p></div>
+        </div>
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="bottom-grid">
+        <!-- 8. DASHBOARD & ANALYTICS -->
+        <div class="grid-panel" style="grid-column: span 1;">
+            <div class="grid-header">8. DASHBOARD & ANALYTICS</div>
+            <div class="grid-body p-0">
+                <div class="mock-dash">
+                    <div class="mock-sidebar">
+                        <div style="margin-bottom: 1rem; font-weight: bold;"><i class="fa-solid fa-cube"></i> AIOPS</div>
+                        <ul>
+                            <li class="active"><i class="fa-solid fa-chart-line"></i> Dashboard</li>
+                            <li><i class="fa-solid fa-ticket"></i> Incidents</li>
+                            <li><i class="fa-solid fa-box"></i> Requests</li>
+                            <li><i class="fa-solid fa-triangle-exclamation"></i> Problems</li>
+                            <li><i class="fa-solid fa-code-merge"></i> Changes</li>
+                            <li><i class="fa-solid fa-book"></i> KB</li>
+                            <li><i class="fa-solid fa-laptop"></i> Assets</li>
+                        </ul>
+                    </div>
+                    <div class="mock-content">
+                        <div class="mock-stats">
+                            <div class="m-stat" style="color: #60a5fa; border-color: #1e3a8a;"><h4>126</h4><p>Total Incidents</p></div>
+                            <div class="m-stat" style="color: #fb923c; border-color: #7c2d12;"><h4>32</h4><p>Open Incidents</p></div>
+                            <div class="m-stat" style="color: #4ade80; border-color: #064e3b;"><h4>76</h4><p>Resolved</p></div>
+                        </div>
+                        <div class="mock-charts">
+                            <div class="m-chart-box">
+                                <div class="m-chart-title">Incidents Trend</div>
+                                <div class="m-line-chart"></div>
+                            </div>
+                            <div class="m-chart-box">
+                                <div class="m-chart-title">By Category</div>
+                                <div class="m-donut-chart"></div>
+                            </div>
+                        </div>
+                        <div class="mock-charts">
+                            <div class="m-chart-box" style="align-items: center; justify-content: center;">
+                                <div class="sla-gauge" style="width: 70px; height: 70px; font-size: 1.2rem; border-width: 6px;">92%</div>
+                                <div style="font-size: 0.65rem;">SLA Compliance</div>
+                            </div>
+                            <div class="m-chart-box">
+                                <div class="m-chart-title">Top Assignees</div>
+                                <div style="font-size: 0.6rem; display: flex; flex-direction: column; gap: 3px; margin-top: 5px;">
+                                    <div style="display: flex; align-items: center; gap: 5px;">support_1 <div style="height: 6px; background: #3b82f6; width: 80%;"></div></div>
+                                    <div style="display: flex; align-items: center; gap: 5px;">support_2 <div style="height: 6px; background: #3b82f6; width: 60%;"></div></div>
+                                    <div style="display: flex; align-items: center; gap: 5px;">support_3 <div style="height: 6px; background: #3b82f6; width: 40%;"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. MAJOR MODULES -->
+        <div class="grid-panel">
+            <div class="grid-header" style="background: #334155; color: white;">9. MAJOR MODULES</div>
+            <div class="grid-body">
+                <div class="module-item c-orange">
+                    <i class="fa-solid fa-ticket"></i>
+                    <div><h5>Incidents</h5><p>Report, track and manage issues</p></div>
+                </div>
+                <div class="module-item">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <div><h5>Requests</h5><p>Request services or resources</p></div>
+                </div>
+                <div class="module-item c-orange">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div><h5>Problems</h5><p>Identify root causes and manage problems</p></div>
+                </div>
+                <div class="module-item c-green">
+                    <i class="fa-solid fa-code-merge"></i>
+                    <div><h5>Changes</h5><p>Plan, approve and implement changes</p></div>
+                </div>
+                <div class="module-item">
+                    <i class="fa-solid fa-laptop"></i>
+                    <div><h5>Assets</h5><p>Track and manage IT assets</p></div>
+                </div>
+                <div class="module-item">
+                    <i class="fa-solid fa-book"></i>
+                    <div><h5>Knowledge Base</h5><p>Articles and solutions for common issues</p></div>
+                </div>
+                <div class="module-item">
+                    <i class="fa-solid fa-chart-bar"></i>
+                    <div><h5>Reports</h5><p>View analytics and generate reports</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. AI CHATBOT -->
+        <div class="grid-panel">
+            <div class="grid-header">10. AI CHATBOT ASSISTANT</div>
+            <div class="grid-body p-0">
+                <div class="chatbot-mock">
+                    <div class="cb-header">
+                        <i class="fa-solid fa-robot"></i> AIOPS Assistant
+                    </div>
+                    <div class="cb-body">
+                        <div class="cb-msg cb-ai">
+                            <span style="font-size: 1rem;">👋</span> Hi! I'm your AIOPS Assistant. How can I help you today?
+                        </div>
+                        <div class="cb-msg cb-user">
+                            My internet is not working
+                        </div>
+                        <div class="cb-msg cb-ai">
+                            I found some similar issues.
+                            <div class="cb-card" style="margin-top: 5px;">
+                                <strong style="color: var(--primary-blue);">Similar Incident Found</strong><br>
+                                INC2077716 - Internet Connection Not Working
+                                <div style="text-align: right; margin-top: 5px;"><span class="cb-btn">View Incident</span></div>
+                            </div>
+                        </div>
+                        <div class="cb-msg cb-ai">
+                            Do you want me to create a new incident for you?
+                        </div>
+                        <div class="cb-msg cb-user">
+                            Yes, please create
+                        </div>
+                    </div>
+                    <div class="cb-input">
+                        Type your message... <i class="fa-solid fa-paper-plane" style="color: var(--primary-blue);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. NOTIFICATIONS -->
+        <div class="grid-panel">
+            <div class="grid-header" style="background: #831843; color: #fbcfe8;">11. NOTIFICATIONS</div>
+            <div class="grid-body">
+                <div class="noti-bell"><i class="fa-solid fa-bell"></i></div>
+                <div class="noti-list">
+                    <div class="noti-item">
+                        <div class="noti-icon bg-blue"><i class="fa-solid fa-check"></i></div>
+                        <div class="noti-content"><h6>Ticket Created</h6><p>INC2077716 has been created</p></div>
+                    </div>
+                    <div class="noti-item">
+                        <div class="noti-icon bg-blue"><i class="fa-solid fa-user-plus"></i></div>
+                        <div class="noti-content"><h6>Ticket Assigned</h6><p>INC2077716 assigned to support_3</p></div>
+                    </div>
+                    <div class="noti-item">
+                        <div class="noti-icon bg-green"><i class="fa-solid fa-rotate"></i></div>
+                        <div class="noti-content"><h6>Status Updated</h6><p>INC2077716 status changed to In Progress</p></div>
+                    </div>
+                    <div class="noti-item">
+                        <div class="noti-icon bg-green"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="noti-content"><h6>Ticket Resolved</h6><p>INC2077716 has been resolved</p></div>
+                    </div>
+                    <div class="noti-item">
+                        <div class="noti-icon bg-yellow"><i class="fa-solid fa-star"></i></div>
+                        <div class="noti-content"><h6>Feedback Request</h6><p>Please rate your experience</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM PROCESS FLOW -->
+    <div style="display: flex; border: 1px solid var(--border-color); border-radius: 8px; background: var(--box-bg); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);">
+        <div style="background: #0f172a; padding: 1rem; display: flex; align-items: center; border-right: 1px solid var(--border-color);">
+            <div style="font-weight: 800; color: var(--primary-blue);">END TO END<br>PROCESS FLOW</div>
+        </div>
+        <div style="flex: 1; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <div class="pf-step"><i class="fa-solid fa-user"></i> <span>User Raises<br>Issue</span></div>
+            <div class="pf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="pf-step highlight"><i class="fa-solid fa-microchip"></i> <span>AI Analyzes &<br>Classifies</span></div>
+            <div class="pf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="pf-step highlight"><i class="fa-solid fa-user-check"></i> <span>Auto Assigns<br>Ticket</span></div>
+            <div class="pf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="pf-step"><i class="fa-solid fa-headset"></i> <span>Agent Works<br>on Ticket</span></div>
+            <div class="pf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="pf-step highlight-green"><i class="fa-solid fa-circle-check"></i> <span>Issue<br>Resolved</span></div>
+            <div class="pf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="pf-step" style="color: #f59e0b;"><i class="fa-solid fa-star"></i> <span style="color: var(--text-dark);">User<br>Feedback</span></div>
+            <div class="pf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="pf-step"><i class="fa-solid fa-book-open"></i> <span>Knowledge<br>Base Updated</span></div>
+            <div class="pf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="pf-step"><i class="fa-solid fa-chart-line"></i> <span>Analytics<br>Updated</span></div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}AIOPS Platform - Asset Tracking{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="mb-4">
+        <h4 class="fw-bold m-0" style="font-size: 1.35rem;">Asset Management</h4>
+        <span class="text-muted" style="font-size: 0.85rem;">Catalog hardware and software licenses allocated to employees.</span>
+    </div>
+
+    <!-- Assets Registry Table Card -->
+    <div class="main-card">
+        <div class="main-card-header">
+            <h5 class="card-title-text">Corporate Asset Catalog</h5>
+        </div>
+        <div class="main-card-body p-0">
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Asset Tag</th>
+                            <th>Asset Name</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Serial Number</th>
+                            <th>Cost</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asset in assets %}
+                        <tr style="cursor: pointer;" onclick="window.location.href='{% url 'asset-detail' asset.id %}'">
+                            <td class="fw-bold text-primary" style="font-size: 0.825rem;">{{ asset.asset_tag }}</td>
+                            <td class="fw-semibold">{{ asset.name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ asset.get_asset_type_display }}</span></td>
+                            <td><span class="badge-status {% if asset.status == 'IN_USE' %}in-progress{% elif asset.status == 'IN_STOCK' %}resolved{% else %}closed{% endif %}">{{ asset.get_status_display }}</span></td>
+                            <td>{{ asset.serial_number }}</td>
+                            <td>${{ asset.cost }}</td>
+                            <td>
+                                <!-- Manage allocation actions -->
+                                <div class="d-flex gap-1" onclick="event.stopPropagation();">
+                                    {% if asset.status == 'IN_STOCK' and request.user.role == 'ADMIN' %}
+                                        <button class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.725rem;" onclick="allocateAssetPrompt('{{ asset.id }}')">Allocate</button>
+                                    {% endif %}
+                                    {% if asset.status == 'IN_USE' and request.user.role == 'ADMIN' %}
+                                        <button class="btn btn-xs btn-outline-danger py-0 px-2" style="font-size: 0.725rem;" onclick="returnAsset('{{ asset.id }}')">Return</button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No assets tracked.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manual Allocation Modal -->
+<div class="modal fade" id="allocateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="font-size: 1rem;"><i class="fa-solid fa-laptop text-primary me-1"></i> Allocate Asset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="allocateForm">
+                    <input type="hidden" id="allocate_asset_id">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted" style="font-size: 0.8rem;">Select Employee (Recipient)</label>
+                        <select class="form-select form-select-sm" id="allocate_user_id" required>
+                            <!-- Seed loader options or dynamically loaded -->
+                            <option value="">-- Choose Employee --</option>
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-sm btn-primary px-3" onclick="submitAllocation()">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let bsAllocateModal;
+    async function allocateAssetPrompt(assetId) {
+        document.getElementById('allocate_asset_id').value = assetId;
+        
+        // Dynamically fetch users to populate list
+        try {
+            const response = await fetch('/api/accounts/users/');
+            if (response.ok) {
+                const users = await response.json();
+                const select = document.getElementById('allocate_user_id');
+                select.innerHTML = '<option value="">-- Choose Employee --</option>';
+                users.results.forEach(user => {
+                    select.innerHTML += `<option value="${user.id}">${user.username} (${user.role_display})</option>`;
+                });
+            }
+        } catch(e) {}
+
+        bsAllocateModal = new bootstrap.Modal(document.getElementById('allocateModal'));
+        bsAllocateModal.show();
+    }
+
+    async function submitAllocation() {
+        const id = document.getElementById('allocate_asset_id').value;
+        const userId = document.getElementById('allocate_user_id').value;
+
+        if (!userId) {
+            alert('Please select an employee.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/assets/catalog/${id}/allocate/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ assigned_to: userId })
+            });
+            if (response.ok) {
+                bsAllocateModal.hide();
+                location.reload();
+            }
+        } catch(e) {}
+    }
+
+    async function returnAsset(id) {
+        if (!confirm('Are you sure you want to log return for this asset?')) return;
+        
+        try {
+            const response = await fetch(`/api/assets/catalog/${id}/return/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            if (response.ok) {
+                location.reload();
+            }
+        } catch(e) {}
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+<div class="top-header">
+    <div class="search-bar">
+        {% if request.user.is_authenticated %}
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" placeholder="Search incidents, requests, users...">
+        {% else %}
+            <span class="text-muted fw-semibold" style="font-size: 0.9rem;">
+                <i class="fa-solid fa-microchip me-1 text-primary"></i> AIOPS Enterprise Portal
+            </span>
+        {% endif %}
+    </div>
+    
+    <div class="header-actions">
+        {% if request.user.is_authenticated %}
+            <!-- Notification bell badge -->
+            <a href="{% url 'notification-list' %}" class="header-icon-btn">
+                <i class="fa-regular fa-bell"></i>
+                {% if unread_notifications_count > 0 %}
+                    <span class="badge-dot">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </a>
+            
+            <button class="header-icon-btn">
+                <i class="fa-regular fa-envelope"></i>
+            </button>
+            
+            <button class="header-icon-btn">
+                <i class="fa-regular fa-calendar"></i>
+            </button>
+    
+            <span class="ms-2 text-muted fw-semibold" style="font-size: 0.85rem;">{{ request.user.username }}</span>
+            <img src="{{ avatar_url }}" alt="Profile" class="user-thumbnail">
+        {% else %}
+            <div class="d-flex gap-2">
+                <a href="{% url 'how-it-works' %}" class="btn btn-sm btn-outline-info px-3 rounded-pill" style="font-size: 0.8rem; font-weight: 600;">
+                    <i class="fa-solid fa-circle-info me-1"></i> How It Works
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-sm btn-outline-primary px-3 rounded-pill me-2" style="font-size: 0.8rem; font-weight: 600;">
+                    <i class="fa-solid fa-right-to-bracket me-1"></i> Sign In
+                </a>
+                <a href="{% url 'register' %}" class="btn btn-sm btn-primary px-3 rounded-pill" style="font-size: 0.8rem; font-weight: 600;">
+                    <i class="fa-solid fa-user-plus me-1"></i> Register
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>

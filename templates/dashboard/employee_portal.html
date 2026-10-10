@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AIOPS Platform - Employee Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Top Welcome Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold m-0" style="font-size: 1.35rem;">Welcome back, {{ request.user.first_name|default:request.user.username }}!</h4>
+            <p class="text-muted m-0" style="font-size: 0.85rem;">Need support or want to request hardware? You've come to the right place.</p>
+        </div>
+        <span class="badge bg-light text-muted border px-3 py-2 fw-semibold"><i class="fa-solid fa-user-shield me-1"></i> Employee Access</span>
+    </div>
+
+    <!-- Quick Actions Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Action 1: Create Ticket -->
+        <div class="col-md-4">
+            <div class="metric-card cursor-pointer" onclick="location.href='{% url 'incidents-list' %}#new-ticket'">
+                <div class="metric-header">
+                    <span class="metric-title" style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">Report an Issue</span>
+                    <div class="metric-icon-wrapper" style="background-color: #fef2f2; color: var(--danger);">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+                <p class="text-muted m-0 mt-2" style="font-size: 0.8rem; line-height: 1.4;">Got a technical issue or broken hardware? Open a ticket to get support from IT.</p>
+                <div class="metric-footer mt-3">
+                    <span class="text-primary fw-semibold" style="font-size: 0.85rem;">File Report <i class="fa-solid fa-arrow-right ms-1"></i></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action 2: Service Catalog -->
+        <div class="col-md-4">
+            <div class="metric-card cursor-pointer" onclick="location.href='{% url 'requests-list' %}#new-request'">
+                <div class="metric-header">
+                    <span class="metric-title" style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">Request Service</span>
+                    <div class="metric-icon-wrapper" style="background-color: #eff6ff; color: var(--primary);">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+                </div>
+                <p class="text-muted m-0 mt-2" style="font-size: 0.8rem; line-height: 1.4;">Request software licenses, laptop allocation, or submit a leave approval.</p>
+                <div class="metric-footer mt-3">
+                    <span class="text-primary fw-semibold" style="font-size: 0.85rem;">Browse Catalog <i class="fa-solid fa-arrow-right ms-1"></i></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action 3: Knowledge Base -->
+        <div class="col-md-4">
+            <div class="metric-card cursor-pointer" onclick="location.href='{% url 'kb-list' %}'">
+                <div class="metric-header">
+                    <span class="metric-title" style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">Knowledge Base</span>
+                    <div class="metric-icon-wrapper" style="background-color: #ecfdf5; color: var(--success);">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                </div>
+                <p class="text-muted m-0 mt-2" style="font-size: 0.8rem; line-height: 1.4;">Troubleshoot common issues instantly by reading our setup guides and FAQs.</p>
+                <div class="metric-footer mt-3">
+                    <span class="text-primary fw-semibold" style="font-size: 0.85rem;">Search Articles <i class="fa-solid fa-arrow-right ms-1"></i></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid Section -->
+    <div class="row g-4 mb-4">
+        <!-- Left Column: Tickets and Requests -->
+        <div class="col-lg-8">
+            <!-- Part 1: My Open Incidents -->
+            <div class="main-card mb-4">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-circle-notch text-primary me-2"></i>My Recent Incidents</h5>
+                    <a href="{% url 'incidents-list' %}" class="btn btn-sm btn-link text-primary fw-bold text-decoration-none">View All</a>
+                </div>
+                <div class="main-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Ticket Number</th>
+                                    <th>Title</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Reported At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for incident in my_incidents %}
+                                <tr>
+                                    <td class="fw-bold text-primary">{{ incident.ticket_number }}</td>
+                                    <td class="fw-semibold">{{ incident.title }}</td>
+                                    <td>
+                                        <span class="badge-priority {{ incident.priority|lower }}">
+                                            {{ incident.get_priority_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-status {{ incident.status|lower }}">
+                                            {{ incident.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-muted">{{ incident.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="fa-solid fa-circle-check fs-4 mb-2 d-block text-success"></i>
+                                        You have no active technical incidents. Great!
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Part 2: My Service Requests -->
+            <div class="main-card mb-0">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-clipboard-list text-primary me-2"></i>My Service Requests</h5>
+                    <a href="{% url 'requests-list' %}" class="btn btn-sm btn-link text-primary fw-bold text-decoration-none">View All</a>
+                </div>
+                <div class="main-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Request Number</th>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Requested At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in my_requests %}
+                                <tr>
+                                    <td class="fw-bold text-primary">{{ req.ticket_number }}</td>
+                                    <td class="fw-semibold">{{ req.title }}</td>
+                                    <td class="text-muted"><span class="badge bg-light text-dark border">{{ req.get_request_type_display }}</span></td>
+                                    <td>
+                                        <span class="badge-status {{ req.status|lower }}">
+                                            {{ req.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-muted">{{ req.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="fa-regular fa-clipboard fs-4 mb-2 d-block text-muted"></i>
+                                        No recent service requests.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: My Assets & Popular FAQs -->
+        <div class="col-lg-4 d-flex flex-column gap-4">
+            <!-- Part 1: My Allocated Assets -->
+            <div class="main-card mb-0">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-laptop text-primary me-2"></i>My Active Assets</h5>
+                    <a href="{% url 'assets-list' %}" class="btn btn-sm btn-link text-primary fw-bold text-decoration-none">View Catalog</a>
+                </div>
+                <div class="main-card-body">
+                    {% for allocation in my_assets %}
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom last-border-0">
+                        <div class="metric-icon-wrapper me-3" style="background-color: #eff6ff; color: var(--primary);">
+                            {% if allocation.asset.asset_type == 'LAPTOP' %}
+                                <i class="fa-solid fa-laptop"></i>
+                            {% elif allocation.asset.asset_type == 'MOBILE' %}
+                                <i class="fa-solid fa-mobile-screen-button"></i>
+                            {% elif allocation.asset.asset_type == 'MONITOR' %}
+                                <i class="fa-solid fa-desktop"></i>
+                            {% else %}
+                                <i class="fa-solid fa-key"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold" style="font-size: 0.875rem;">{{ allocation.asset.name }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">
+                                Tag: <span class="fw-bold">{{ allocation.asset.asset_tag }}</span> | S/N: {{ allocation.asset.serial_number }}
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success px-2 py-1" style="font-size: 0.7rem; font-weight: 600;">ACTIVE</span>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fa-solid fa-boxes-stacked fs-4 mb-2 d-block text-muted"></i>
+                        No active assets allocated to you.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Part 2: Popular FAQs -->
+            <div class="main-card mb-0">
+                <div class="main-card-header">
+                    <h5 class="card-title-text"><i class="fa-solid fa-circle-question text-primary me-2"></i>Popular Solutions</h5>
+                </div>
+                <div class="main-card-body">
+                    {% for article in kb_articles %}
+                    <div class="insight-item">
+                        <div class="insight-header text-primary fw-semibold" style="font-size: 0.85rem;">
+                            <i class="fa-regular fa-file-lines me-1"></i> {{ article.title }}
+                        </div>
+                        <div class="insight-summary" style="font-size: 0.775rem;">
+                            {{ article.content|truncatewords:15 }}
+                        </div>
+                        <div class="mt-1 d-flex justify-content-between align-items-center">
+                            <span class="text-muted" style="font-size: 0.7rem;"><i class="fa-solid fa-eye me-1"></i> {{ article.views }} views</span>
+                            <a href="{% url 'kb-list' %}#article-{{ article.id }}" class="insight-link" style="font-size: 0.75rem;">Read Article</a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">
+                        No articles available in the database.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
